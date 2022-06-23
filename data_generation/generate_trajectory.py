@@ -2,11 +2,32 @@ import numpy as np
 import random
 from matplotlib import pyplot as plt
 
+def isInMaze(x, y, mazeBinMat, D):
+
+    x_cor = int(np.floor(x/D))
+    y_cor = int(np.floor(y/D))
+
+    if x_cor == 7:
+        x_cor = 6
+    if y_cor == 7:
+        y_cor = 6
+
+    if y_cor < 0  or x_cor < 0 or y_cor > 7 or x_cor > 7:
+        return False
+    if mazeBinMat[x_cor, y_cor] == 1:
+        return True
+    else:
+        return False
+
 #Parameters
 N = 7 #Maze size
 D = 10 #maze discretization per cell
 M = N*D
 
+MazeCells = np.array([[0,0],[0,1],[0,2], [1, 1]])
+MazeBinary = np.zeros((N,N))
+MazeBinary[tuple(MazeCells.T)] = 1
+print(MazeBinary)
 #generate random walk
 
 # defining the number of steps
@@ -20,10 +41,45 @@ y_traj = np.zeros(n)
 # filling the coordinates with random variables
 x_traj[0] = random.randint(0, M)
 y_traj[0] = random.randint(0, M)
+while not isInMaze(x_traj[0], y_traj[0], MazeBinary, D):
+    x_traj[0] = random.randint(0, M)
+    y_traj[0] = random.randint(0, M)
 
-for i in range(1, n):
+i = 0
+while i < n:
+    r = random.randint(0,7)
     #wall constraints
-    if x_traj[i-1] -1 < 0:
+    if r == 0:
+        x_traj[i] = x_traj[i - 1] + 1
+        y_traj[i] = y_traj[i-1]
+    elif r == 1:
+        x_traj[i] = x_traj[i - 1] -1
+        y_traj[i] = y_traj[i - 1]
+    elif r == 2:
+        x_traj[i] = x_traj[i - 1]
+        y_traj[i] = y_traj[i - 1] + 1
+    elif r == 3:
+        x_traj[i] = x_traj[i - 1]
+        y_traj[i] = y_traj[i - 1] - 1
+    elif r == 4:
+        x_traj[i] = x_traj[i - 1] + 1
+        y_traj[i] = y_traj[i - 1] + 1
+    elif r == 5:
+        x_traj[i] = x_traj[i - 1] - 1
+        y_traj[i] = y_traj[i - 1] - 1
+    elif r == 6:
+        x_traj[i] = x_traj[i - 1] + 1
+        y_traj[i] = y_traj[i - 1] - 1
+    elif r == 7:
+        x_traj[i] = x_traj[i - 1] - 1
+        y_traj[i] = y_traj[i - 1] + 1
+
+    if isInMaze(x_traj[i], y_traj[i], MazeBinary, D):
+        i = i+1
+
+    print("t")
+
+    """if x_traj[i-1] -1 < 0:
         x_traj[i] = x_traj[i - 1] + random.randint(0, 1)
     elif x_traj[i-1] + 1 > M:
         x_traj[i] = x_traj[i - 1] + random.randint(-1, 0)
@@ -35,20 +91,20 @@ for i in range(1, n):
     elif y_traj[i-1] + 1 > M:
         y_traj[i] = y_traj[i - 1] + random.randint(-1, 0)
     else:
-        y_traj[i] = y_traj[i - 1] + random.randint(-1, 1)
+        y_traj[i] = y_traj[i - 1] + random.randint(-1, 1)"""
 
-
+mat = np.zeros((M,M))
+mat[(x_traj.astype(int)-1, y_traj.astype(int)-1)] = 1
+print(mat)
 # plotting stuff:
+im = plt.figure()
 plt.title("Random Walk ($n = " + str(n) + "$ steps) in maze")
 plt.plot(x_traj/D, y_traj/D)
-
 plt.xlim([0, N])
 plt.ylim([0, N])
 plt.grid()
-
-#pylab.savefig("rand_walk" + str(n) + ".png", bbox_inches="tight", dpi=600)
+plt.imshow(MazeBinary, extent = [0, N, 0, N])
 plt.show()
-
 
 
 
