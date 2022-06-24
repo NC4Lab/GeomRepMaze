@@ -24,7 +24,7 @@ N = 7 #Maze size
 D = 10 #maze discretization per cell
 M = N*D
 
-MazeCells = np.array([[0,0],[0,1],[0,2], [1, 1]])
+MazeCells = np.array([[0,0],[0,1], [1, 1], [1, 2], [2,2], [2, 3], [3, 2], [2, 4], [3, 1], [4, 1]])
 MazeBinary = np.zeros((N,N))
 MazeBinary[tuple(MazeCells.T)] = 1
 print(MazeBinary)
@@ -77,25 +77,11 @@ while i < n:
     if isInMaze(x_traj[i], y_traj[i], MazeBinary, D):
         i = i+1
 
-    print("t")
 
-    """if x_traj[i-1] -1 < 0:
-        x_traj[i] = x_traj[i - 1] + random.randint(0, 1)
-    elif x_traj[i-1] + 1 > M:
-        x_traj[i] = x_traj[i - 1] + random.randint(-1, 0)
-    else:
-        x_traj[i] = x_traj[i - 1] + random.randint(-1, 1)
 
-    if y_traj[i-1] -1 < 0:
-        y_traj[i] = y_traj[i - 1] + random.randint(0, 1)
-    elif y_traj[i-1] + 1 > M:
-        y_traj[i] = y_traj[i - 1] + random.randint(-1, 0)
-    else:
-        y_traj[i] = y_traj[i - 1] + random.randint(-1, 1)"""
 
 mat = np.zeros((M,M))
 mat[(x_traj.astype(int)-1, y_traj.astype(int)-1)] = 1
-print(mat)
 # plotting stuff:
 im = plt.figure()
 plt.title("Random Walk ($n = " + str(n) + "$ steps) in maze")
@@ -103,7 +89,7 @@ plt.plot(x_traj/D, y_traj/D)
 plt.xlim([0, N])
 plt.ylim([0, N])
 plt.grid()
-plt.imshow(MazeBinary, extent = [0, N, 0, N])
+plt.imshow(MazeBinary.T[::-1], extent = [0, N, 0, N])
 plt.show()
 
 
