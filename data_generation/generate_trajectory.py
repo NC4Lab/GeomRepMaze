@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from matplotlib import pyplot as plt
+from spatial_firing import NeuronsSpatialFiring
 
 def isInMaze(x, y, mazeBinMat, D):
 
@@ -27,11 +28,11 @@ M = N*D
 MazeCells = np.array([[0,0],[0,1], [1, 1], [1, 2], [2,2], [2, 3], [3, 2], [2, 4], [3, 1], [4, 1]])
 MazeBinary = np.zeros((N,N))
 MazeBinary[tuple(MazeCells.T)] = 1
-print(MazeBinary)
+
 #generate random walk
 
 # defining the number of steps
-n = 10000
+n = 1000
 
 # creating to array for containing x and y coordinate
 # of size equals to the number of size and filled up with 0's
@@ -90,9 +91,12 @@ plt.xlim([0, N])
 plt.ylim([0, N])
 plt.grid()
 plt.imshow(MazeBinary.T[::-1], extent = [0, N, 0, N])
+#plt.show()
+
+#Neuron firing fields
+placeFields = NeuronsSpatialFiring(D = D, BinaryMaze = MazeBinary, N = 3)
+placeFields.generateFiringFields()
+plt.plot(placeFields.fieldCenters[:, 0], placeFields.fieldCenters[:, 1], 'r*')
 plt.show()
 
-
-
-
-
+placeFields.fire(np.column_stack([x_traj/D, y_traj/D]))
