@@ -10,25 +10,21 @@ def gaussian(x, std, mus):
 
 class NeuronsSpatialFiring:
 
-    def __init__(self, D, BinaryMaze = None, N=100, std = 1, mu = 1):
+    def __init__(self, disc = 100, N=100, std = 1): #Todo add gaussian shapes + max
         self.n_neurons = N
-        self.binMaze = np.asarray(BinaryMaze)
-        self.res = D
+        self.res = disc
         self.std = std
-        self.mu = mu
 
         self.fieldCenters = None
 
-    #def generate_spatial_data(self):
-
-    def generateFiringFields(self):
-        highResMaze = np.repeat(self.binMaze, 10, axis = 1)
-        highResMaze = np.repeat(highResMaze, 10, axis = 0) #Todo change this, add D
+    def generateFiringFields(self, binMaze):
+        highResMaze = np.repeat(binMaze, self.res, axis = 1)
+        highResMaze = np.repeat(highResMaze, self.res, axis = 0) #Todo change this?
         inMazeId = np.where(highResMaze == 1)
         rndList = random.sample(list(np.arange( 0, len(inMazeId[0]))), self.n_neurons)
         self.fieldCenters = np.column_stack([inMazeId[0][rndList]/self.res, inMazeId[1][rndList]/self.res])
 
-    def fire(self, traj):
+    def fire(self, traj): #Todo add noise
 
         firing_rates = gaussian(traj, self.std, self.fieldCenters)
         fig, axs = plt.subplots(self.n_neurons)
