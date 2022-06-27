@@ -32,3 +32,6 @@ class Trajectory:
             self.y_traj[i] = next[1]
             i = i + 1
 
+
+
+

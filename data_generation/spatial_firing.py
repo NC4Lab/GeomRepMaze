@@ -27,10 +27,8 @@ class NeuronsSpatialFiring:
     def fire(self, traj): #Todo add noise
 
         firing_rates = gaussian(traj, self.std, self.fieldCenters)
-        fig, axs = plt.subplots(self.n_neurons)
-        for i in range(self.n_neurons):
-            axs[i].plot(firing_rates[:, i])
-        plt.show()
+        return firing_rates
+
 
 
 

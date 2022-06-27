@@ -10,8 +10,9 @@ from spatial_firing import NeuronsSpatialFiring
 
 #Maze
 mazeSize = 7
-mazeCells = np.array([[2, 0], [1, 1], [2, 1], [3, 1], [4, 1],
-                      [5, 1], [3, 2], [4, 3], [0, 3], [1, 2], [0, 2], [3,3]])
+mazeCells = list([[[2, 0], [2, 1], [1, 2], [0, 3]],
+                     [[2, 0], [2, 1], [3, 2], [4, 3]],
+                     [[2, 0], [2, 1], [3, 1], [4, 1], [5, 1]]])
 Home = [2, 0]
 G1 = [0, 3]
 G2 = [4, 3]
@@ -33,10 +34,10 @@ traj = Trajectory(n_steps, step_size)
 placeFields = NeuronsSpatialFiring(disc = disc, N = n_neurons)
 
 
-maze.createMaze(mazeCells)
-traj.generate_random_walk(maze)
+maze.createSquareMaze(mazeCells)
 placeFields.generateFiringFields(maze.binaryMaze)
-placeFields.fire(np.column_stack([traj.x_traj, traj.y_traj]))
+traj.generate_random_walk(maze)
+firingRates = placeFields.fire(np.column_stack([traj.x_traj, traj.y_traj]))
 
 
 ##PLOTS
@@ -52,6 +53,12 @@ plt.imshow(maze.binaryMaze.T[::-1], extent = [0, maze.N, 0, maze.N])
 plt.plot(placeFields.fieldCenters[:, 0], placeFields.fieldCenters[:, 1], 'r*')
 plt.show()
 
+fig, axs = plt.subplots(n_neurons)
+for i in range(n_neurons):
+    axs[i].plot(firingRates[:, i])
+plt.show()
+
+maze.createOctoMaze(mazeCells)
 
 
 
