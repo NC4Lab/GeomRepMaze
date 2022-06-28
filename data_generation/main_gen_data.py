@@ -9,6 +9,7 @@ from spatial_firing import NeuronsSpatialFiring
 ##################################### Variables ###############################
 
 #Maze
+octoMazeBool = True
 mazeSize = 7
 mazeCells = list([[[2, 0], [2, 1], [1, 2], [0, 3]],
                      [[2, 0], [2, 1], [3, 2], [4, 3]],
@@ -29,25 +30,35 @@ n_steps = 1000
 step_size = 1/10
 
 ############################# Main ##########################################
-maze = Maze(mazeSize)
+print("START")
+maze = Maze(mazeSize, octoMazeBool = octoMazeBool)
 traj = Trajectory(n_steps, step_size)
 placeFields = NeuronsSpatialFiring(disc = disc, N = n_neurons)
 
+print("create maze")
+maze.create_maze(mazeCells)
 
-maze.createSquareMaze(mazeCells)
-placeFields.generateFiringFields(maze.binaryMaze)
+print("place firing fields")
+placeFields.generateFiringFields(maze.mazeFlags)
+
+print("generate a trajectory")
 traj.generate_random_walk(maze)
+
+print("generate firing rates")
 firingRates = placeFields.fire(np.column_stack([traj.x_traj, traj.y_traj]))
 
 
 ##PLOTS
 im = plt.figure()
 plt.title("Random Walk in maze")
+"""c = np.tan(np.linspace(-1, 1, len(traj.x_traj)))
+plt.scatter(traj.x_traj, traj.y_traj, c = c)"""
 plt.plot(traj.x_traj, traj.y_traj)
+
 plt.xlim([0, maze.N])
 plt.ylim([0, maze.N])
 plt.grid()
-plt.imshow(maze.binaryMaze.T[::-1], extent = [0, maze.N, 0, maze.N])
+plt.imshow(maze.mazeFlags[::-1], extent = [0, maze.N, 0, maze.N])
 
 #Neuron firing fields
 plt.plot(placeFields.fieldCenters[:, 0], placeFields.fieldCenters[:, 1], 'r*')
@@ -58,7 +69,6 @@ for i in range(n_neurons):
     axs[i].plot(firingRates[:, i])
 plt.show()
 
-maze.createOctoMaze(mazeCells)
 
 
 

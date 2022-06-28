@@ -1,8 +1,10 @@
 import numpy as np
 import math
+from matplotlib.path import Path
 from matplotlib import pyplot as plt
 from shapely.ops import unary_union
 from shapely.geometry.polygon import Polygon
+from shapely.geometry import Point
 
 
 
@@ -10,13 +12,23 @@ from shapely.geometry.polygon import Polygon
 "Class to define a Square Maze with obstacles"
 class Maze():
 
-    def __init__(self, N):
+    def __init__(self, N, octoMazeBool = False, MazeRes = 100):
         #initialize 2D space
+        self.octoMazeBool = octoMazeBool #a boolean to choose betwen octgonal or square maze grid
         self.N = N #Maze width
 
-        self.binaryMaze = np.zeros((self.N, self.N), dtype=bool) #contain routes (1 = route, 0 = non-route)
+        self.squareMaze = np.zeros((self.N, self.N), dtype=bool) #contain routes (1 = route, 0 = non-route)
+        self.octoMaze = None
         self.home = None
         self.goals = None
+        self.MazeRes = MazeRes #pixels per tile
+        self.mazeFlags = np.zeros([self.MazeRes*N, self.MazeRes*N], dtype = bool)
+
+    def create_maze(self, mazeCells, home = None, goals = None):
+        if self.octoMazeBool:
+            self.createOctoMaze(mazeCells)
+        else:
+            self.createSquareMaze(mazeCells)
 
     def createSquareMaze(self, mazeCells, home = None, goals = None):
         #create maze routes
@@ -25,7 +37,10 @@ class Maze():
         self.goals = goals
 
         for i in range(len(mazeCells)):
-            self.binaryMaze[tuple(np.asarray(mazeCells[i]).T)] = True #set routes
+            self.squareMaze[tuple(np.asarray(mazeCells[i]).T)] = True #set routes
+
+        mazeFlags = np.repeat(self.squareMaze, self.MazeRes, axis = 1)
+        self.mazeFlags = np.repeat(mazeFlags, self.MazeRes, axis = 0).T #[::-1]
 
     def createOctoMaze(self, mazeCells):
         nb_path = len(mazeCells)
@@ -67,13 +82,23 @@ class Maze():
 
                 #plt.plot(*u.exterior.xy)
 
-        u = unary_union(polygonList)
+        self.octoMaze = Path(np.asarray(unary_union(polygonList).exterior.xy).T)
+        M = self.N*self.MazeRes
+        xv, yv = np.meshgrid(np.linspace(0, self.N, M), np.linspace(0, self.N, M))
+
+        binMaze = a = self.octoMaze.contains_points(np.hstack((xv.flatten()[:,np.newaxis],yv.flatten()[:,np.newaxis])))
+        self.mazeFlags = binMaze.reshape(M, M)
+
+        """u = unary_union(polygonList)
         plt.plot(*u.exterior.xy)
-        plt.show()
+        plt.show()"""
 
 
     def isInMaze(self, x, y):
         #check if point in the maze
+        if self.octoMazeBool:
+            return self.octoMaze.contains_point([x, y])
+
         x_cor = int(np.floor(x))
         y_cor = int(np.floor(y))
 
@@ -84,7 +109,7 @@ class Maze():
 
         if y_cor < 0 or x_cor < 0 or y_cor > 7 or x_cor > 7:
             return False
-        if self.binaryMaze[x_cor, y_cor] == 1:
+        if self.squareMaze[x_cor, y_cor] == 1:
             return True
         else:
             return False

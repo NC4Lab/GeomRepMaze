@@ -18,11 +18,10 @@ class NeuronsSpatialFiring:
         self.fieldCenters = None
 
     def generateFiringFields(self, binMaze):
-        highResMaze = np.repeat(binMaze, self.res, axis = 1)
-        highResMaze = np.repeat(highResMaze, self.res, axis = 0) #Todo change this?
-        inMazeId = np.where(highResMaze == 1)
-        rndList = random.sample(list(np.arange( 0, len(inMazeId[0]))), self.n_neurons)
-        self.fieldCenters = np.column_stack([inMazeId[0][rndList]/self.res, inMazeId[1][rndList]/self.res])
+         #binMaze = binMaze[::-1]
+        inMazeId = np.where(binMaze == True)
+        rndList = random.sample(list(np.arange(0, len(inMazeId[0]))), self.n_neurons)
+        self.fieldCenters = np.column_stack([inMazeId[1][rndList]/self.res, inMazeId[0][rndList]/self.res])
 
     def fire(self, traj): #Todo add noise
 
