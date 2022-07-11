@@ -12,10 +12,14 @@ class Trajectory:
         self.x_traj = np.zeros([self.n_steps, self.n_traj])
         self.y_traj = np.zeros([self.n_steps, self.n_traj])
         self.d = trajSettings["step_size"]
+        self.homes = trajSettings["homes"]
+        self.goals = trajSettings["goals"]
+
+    """def generate_p2p_trajectory(self, maze):"""
 
 
     def generate_random_walk(self, maze):
-        home = maze.home
+        home = self.homes[maze.trial]
         # TODO  move flag computation to maze class
         home_pol = create_octogon_from_point(home)
         home_pol = Path(np.asarray(home_pol.exterior.xy).T)
@@ -36,7 +40,7 @@ class Trajectory:
                 self.y_traj[0, t] = y_start[idx]/ maze.mazeRes
 
             else:
-                y_start, x_start = np.where(maze.mazeFlags == 1)
+                y_start, x_start = np.where(maze.trialMazeFlags == 1)
                 idx = np.random.choice(np.arange(len(x_start)), 1)
                 self.x_traj[0, t] = x_start[idx]/maze.mazeRes
                 self.y_traj[0, t] = y_start[idx]/maze.mazeRes

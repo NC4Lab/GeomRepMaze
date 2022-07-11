@@ -11,44 +11,22 @@ from sklearn.preprocessing import StandardScaler
 from settings.custom_settings import CustomSettings
 from settings.default_settings import DefaultSettings
 
-####################################Constants##########3
+####################################Constants##########
 
-
-##################################### Settings ###############################
-#Maze
-#octoMazeBool = True
-#mazeSize = 7
-#trial_nb = 2
-#home = [0, 3]
-#G1 = [0, 3]
-#G2 = [4, 3]
-#G3 = [5, 1]
-
-#Hyp
-#hyp = "euclidean"
-
-#Neurons
-#n_neurons = 100
-#disc = 100 #discretization of each maze cells to chose firing field center position
-
-#Trajectory
-#n_traj = 5
-#n_steps = 1000
-#step_size = 1/10
 
 ############################# Main ##########################################
 if __name__ == '__main__':
     print("START")
     s = CustomSettings()
 
-#    maze = Maze(s.mazeSize, octoMazeBool = s.octoMazeBool, home= s.home)
+#   maze = Maze(s.mazeSize, octoMazeBool = s.octoMazeBool, home= s.home)
     maze = Maze(s.mazeSettings)
     traj = Trajectory(s.trajectorySettings)
     placeFields = NeuronsSpatialFiring(s.firingSettings)
     print("create maze")
-    maze.create_maze(s.mazeSettings["mazeList"][0])
+    maze.createTrialMaze(s.mazeSettings)
     print("place firing fields")
-    placeFields.generateFiringFields(maze.mazeFlags)
+    placeFields.generateFiringFields(maze.fullMazeFlags)
     print("generate a trajectory")
     traj.generate_random_walk(maze)
     print("generate firing rates")
@@ -68,7 +46,7 @@ if __name__ == '__main__':
     plt.plot(placeFields.fieldCenters[:, 0], placeFields.fieldCenters[:, 1], 'r*', label = "place field centers")
 
     plt.legend()
-    plt.imshow(maze.mazeFlags[::-1], extent = [0, maze.N, 0, maze.N])
+    plt.imshow(maze.trialMazeFlags[::-1], extent = [0, maze.N, 0, maze.N])
     plt.show()
     #Neuron firing fields
 

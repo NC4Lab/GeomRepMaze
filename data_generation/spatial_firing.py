@@ -40,6 +40,7 @@ class NeuronsSpatialFiring:
         self.n_neurons = firingSettings["n_neurons"]
         self.res = firingSettings["resolution"]
         self.std = firingSettings["std"]
+        self.hyp = firingSettings["hyp"]
 
         self.fieldCenters = None
 
