@@ -53,13 +53,13 @@ class CustomSettings():
             "n_traj": 1,
             "n_steps": 1000,
             "step_size": 1 / 10,
-            "homes": [[0, 3], [1, 0]],
-            "goals": [[[3, 0], [4, 3], [6, 1]], [[3, 6], [6, 5], [4, 3]]]
+            "homes": [[2, 0], [3, 0]],
+            "goals": [[[4, 3], [4, 3], [5, 1]], [[3, 6], [6, 5], [4, 3]]]
         }
 
         self.firingSettings = {
             "hyp": "euclidean",
-            "n_neurons": 5,
+            "n_neurons": 100,
             "resolution": 100,
             "std": 0.7,
         }

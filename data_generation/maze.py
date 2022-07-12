@@ -30,7 +30,8 @@ class Maze():
         #self.goals = None
         self.trial = mazeSettings["trial_nb"]
         self.mazeRes = mazeSettings["resolution"]  # pixels per tile
-
+        self.cellList = mazeSettings["cellList"]
+        self.edgeList = mazeSettings["edgeList"]
         #Maze config initialization
         self.fullSquareMaze = np.zeros((self.N, self.N), dtype=bool)
         self.trialSquareMaze = np.zeros((self.N, self.N), dtype=bool)
@@ -191,9 +192,13 @@ class Maze():
 
         #Octogonal maze
         if self.octoMazeBool:
-            if mode == "trial":
+            if mode == "trial" and np.size(x) > 1:
+                return self.trialOctoMaze.contains_points(np.array([x, y]).T)
+            elif mode == "trial" and np.size(x) == 1:
                 return self.trialOctoMaze.contains_point([x, y])
-            elif mode == "full":
+            elif mode == "full" and np.size(x) > 1:
+                return self.fullOctoMaze.contains_points(np.array([x, y]).T)
+            elif mode == "full" and np.size(x) == 1:
                 return self.fullOctoMaze.contains_point([x, y])
             else:
                 print("Error: specify a valid mode")
@@ -221,14 +226,21 @@ class Maze():
 
     def get_adjacent_points(self, x_coor, y_coor, d):
         """returns points adjacent to a point that are in the maze, given a displacement d"""
+        K = 360 #number of adjacet points
 
-        list_adjcoorX = []
-        list_adjcoorY = []
+        dx = d*np.cos(2*np.pi/K*(np.arange(K)+1))
+        dy = d*np.sin(2*np.pi/K*(np.arange(K)+1))
+        x_prov = x_coor + dx
+        y_prov = y_coor + dy
 
-        for x, y in [(x_coor + i, y_coor + j) for i in (-d, 0, d) for j in (-d, 0, d) if i != 0 or j != 0]:
+        inMazeIdx = self.isInMaze(x_prov, y_prov, mode="trial")
+
+        x = x_prov[inMazeIdx]
+        y = y_prov[inMazeIdx]
+        """for x, y in [(x_coor + i, y_coor + j) for i in (-d, 0, d) for j in (-d, 0, d) if i != 0 or j != 0]:
             if self.isInMaze(x, y, mode = "trial"):
                 list_adjcoorX.append(x)
-                list_adjcoorY.append(y)
+                list_adjcoorY.append(y)"""
 
-        return np.asarray(list_adjcoorX), np.asarray(list_adjcoorY)
+        return x, y
 

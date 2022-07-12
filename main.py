@@ -28,16 +28,21 @@ if __name__ == '__main__':
     print("place firing fields")
     placeFields.generateFiringFields(maze.fullMazeFlags)
     print("generate a trajectory")
-    traj.generate_random_walk(maze)
+    #traj.generate_random_walk(maze)
+    traj.generate_p2p_trajectory(maze)
     print("generate firing rates")
     firingRates = placeFields.fire(np.array([traj.x_traj, traj.y_traj]))
 
     ##PLOTS
     im = plt.figure()
     plt.title("Random Walk in maze, trajectory 1")
-    plt.plot(traj.x_traj[:, 0], traj.y_traj[:, 0], label = "trajectory")
-    plt.plot(traj.x_traj[0, 0], traj.y_traj[0, 0], 'ko', label = "start")
-    plt.plot(traj.x_traj[-1, 0], traj.y_traj[-1, 0], 'k*', label = "stop")
+    plt.plot(traj.x_traj[0], traj.y_traj[0], label = "trajectory")
+    plt.plot(traj.x_traj[0][0], traj.y_traj[0][0], 'ko', label = "start")
+    plt.plot(traj.x_traj[0][-1], traj.y_traj[0][-1], 'k*', label = "stop")
+
+    #plt.plot(traj.x_traj[:, 0], traj.y_traj[:, 0], label = "trajectory")
+    #plt.plot(traj.x_traj[0, 0], traj.y_traj[0, 0], 'ko', label = "start")
+    #plt.plot(traj.x_traj[-1, 0], traj.y_traj[-1, 0], 'k*', label = "stop")
 
 
     plt.xlim([0, maze.N])
