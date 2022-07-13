@@ -4,12 +4,12 @@ from matplotlib import pyplot as plt
 
 def gaussian(x, std, mus, p_max): #Todo move to utils
     K = std*np.sqrt(2*np.pi)*p_max
-    mus_resh = np.repeat(mus[:, np.newaxis, :], x.shape[2], axis=1)
-    x_resh = np.moveaxis(x, 0, 2)
-    mat = np.empty([x_resh.shape[0], mus_resh.shape[0], x_resh.shape[1], x_resh.shape[2]])
+    mus_resh = np.repeat(mus[:, np.newaxis, :], x.shape[1], axis=1)
+    x_resh = x.T
+    mat = np.empty([x_resh.shape[0], mus_resh.shape[0], x_resh.shape[1]])
     for i in range(mat.shape[0]):
         for j in range(mat.shape[1]):
-            mat[i, j, :, :] = x_resh[i, :, :] - mus_resh[j, :, :]
+            mat[i, j, :] = x_resh[i, :] - mus_resh[j, i, :]
 
     deltas = np.linalg.norm(mat, axis=-1)
 

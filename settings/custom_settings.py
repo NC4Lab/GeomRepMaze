@@ -49,9 +49,9 @@ class CustomSettings():
         }
 
         self.trajectorySettings = {
-            "type": "random_walk", #"random_walk", "point_to_point"
-            "n_traj": 1,
-            "n_steps": 1000,
+            "type": "point_to_point", #"random_walk", "point_to_point"
+            "n_traj": 5,
+            "n_steps": 10000,
             "step_size": 1 / 10,
             "homes": [[2, 0], [3, 0]],
             "goals": [[[4, 3], [4, 3], [5, 1]], [[3, 6], [6, 5], [4, 3]]]

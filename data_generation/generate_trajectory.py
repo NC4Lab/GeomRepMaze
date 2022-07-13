@@ -13,6 +13,7 @@ class Trajectory:
 
         self.x_traj = None
         self.y_traj = None
+        self.traj_cut_idx = np.zeros(self.n_traj+1, dtype=int)
         self.d = trajSettings["step_size"]
         self.homes = trajSettings["homes"]
         self.goals = trajSettings["goals"]
@@ -42,20 +43,20 @@ class Trajectory:
         for i in range(self.n_traj):
             #self.x_traj[0, i] = path[0, 0] + 0.5
             #self.y_traj[0, i] = path[0, 1] + 0.5
-            x = [path[0, 0]]
-            y = [path[0, 1]]
+            self.x_traj.append(path[0, 0])
+            self.y_traj.append(path[0, 1])
             k = 0
             for j in range(len(path)-1):
-                while np.linalg.norm(path[j + 1] - [x[-1], y[-1]]) > 0.1:
-                    validNextX, validNextY = maze.get_adjacent_points(x[k], y[k],
+                while np.linalg.norm(path[j + 1] - [self.x_traj[-1], self.y_traj[-1]]) > 0.1:
+                    validNextX, validNextY = maze.get_adjacent_points(self.x_traj[k], self.y_traj[k],
                                                                       self.d)
                     validNext = np.column_stack([validNextX, validNextY])
 
-                    vToGoal = path[j+1] - np.array([x[k], y[k]])
+                    vToGoal = path[j+1] - np.array([self.x_traj[k], self.y_traj[k]])
                     vToGoal = vToGoal/np.linalg.norm(vToGoal)*self.d
-                    driftPos = np.array([x[k], y[k]]) + vToGoal
+                    driftPos = np.array([self.x_traj[k], self.y_traj[k]]) + vToGoal
 
-                    if maze.isInMaze(x[k] + vToGoal[0], y[k] + vToGoal[1]):
+                    if maze.isInMaze(self.x_traj[k] + vToGoal[0], self.y_traj[k] + vToGoal[1]):
                         validNext = np.row_stack([validNext, driftPos])
                         prob = np.ones(len(validNext))*((1-p_drift)/(len(validNext)-1))
                         prob[-1] = p_drift
@@ -64,13 +65,12 @@ class Trajectory:
                         idxNext = random.choice(np.arange(len(validNext)))
 
                     nextPos = validNext[idxNext]
-                    x.append(nextPos[0])
-                    y.append(nextPos[1])
+                    self.x_traj.append(nextPos[0])
+                    self.y_traj.append(nextPos[1])
                     k = k+1
                     """self.x_traj[i, t] = next[0]
                     self.y_traj[i, t] = next[1]"""
-            self.x_traj.append(x)
-            self.y_traj.append(y)
+            self.traj_cut_idx[i+1] = int(k + 1 + self.traj_cut_idx[i])
 
         self.x_traj = np.asarray(self.x_traj).T
         self.y_traj = np.asarray(self.y_traj).T
@@ -79,8 +79,11 @@ class Trajectory:
 
 
     def generate_random_walk(self, maze):
-        self.x_traj = np.zeros([self.n_steps, self.n_traj])
-        self.y_traj = np.zeros([self.n_steps, self.n_traj])
+        self.x_traj = np.zeros(self.n_steps * self.n_traj)
+        self.y_traj = np.zeros(self.n_steps * self.n_traj)
+
+        self.traj_cut_idx = np.linspace(0, self.n_steps * self.n_traj, self.n_traj+1, dtype=int)
+
         home = self.homes[maze.trial]
         # TODO  move flag computation to maze class
         home_pol = create_octogon_from_point(home)
@@ -98,22 +101,22 @@ class Trajectory:
             if home is not None:
                 y_start, x_start = np.where(homeFlags == 1)
                 idx = np.random.choice(np.arange(len(x_start)), 1)
-                self.x_traj[0, t] = x_start[idx]/ maze.mazeRes
-                self.y_traj[0, t] = y_start[idx]/ maze.mazeRes
+                self.x_traj[t*self.n_steps] = x_start[idx]/ maze.mazeRes
+                self.y_traj[t*self.n_steps] = y_start[idx]/ maze.mazeRes
 
             else:
                 y_start, x_start = np.where(maze.trialMazeFlags == 1)
                 idx = np.random.choice(np.arange(len(x_start)), 1)
-                self.x_traj[0, t] = x_start[idx]/maze.mazeRes
-                self.y_traj[0, t] = y_start[idx]/maze.mazeRes
+                self.x_traj[t*self.n_steps] = x_start[idx]/maze.mazeRes
+                self.y_traj[t*self.n_steps] = y_start[idx]/maze.mazeRes
             #generate random trajectory with constant displacement (cst speed)
             i = 1
             while i < self.n_steps:
-                validNextX, validNextY = maze.get_adjacent_points(self.x_traj[i-1, t], self.y_traj[i-1, t], self.d)
+                validNextX, validNextY = maze.get_adjacent_points(self.x_traj[i-1+t*self.n_steps], self.y_traj[i-1+t*self.n_steps], self.d)
                 validNext = np.column_stack([validNextX, validNextY])
                 next = random.choice(validNext)
-                self.x_traj[i, t] = next[0]
-                self.y_traj[i, t] = next[1]
+                self.x_traj[i+t*self.n_steps] = next[0]
+                self.y_traj[i+t*self.n_steps] = next[1]
                 i = i + 1
 
         return
