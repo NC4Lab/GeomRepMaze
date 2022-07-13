@@ -72,6 +72,9 @@ class Trajectory:
             self.x_traj.append(x)
             self.y_traj.append(y)
 
+        self.x_traj = np.asarray(self.x_traj).T
+        self.y_traj = np.asarray(self.y_traj).T
+
         return
 
 

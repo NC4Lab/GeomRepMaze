@@ -64,7 +64,8 @@ if __name__ == '__main__':
 
     plt.figure()
     plt.title("Firing rates of 1 neuron")
-    plt.plot(np.linspace(0, s.trajectorySettings["n_steps"], s.trajectorySettings["n_steps"]), firingRates[:, 0,  0])
+    L = len(firingRates[:, 0,  0])
+    plt.plot(np.arange(L), firingRates[:, 0,  0])
     plt.show()
 
 
