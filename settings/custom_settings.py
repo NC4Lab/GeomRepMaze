@@ -24,7 +24,21 @@ edgesT2 = [[[0, 3], [1, 4]],
            [[2, 5], [3, 4]],
            [[3, 4], [4, 3]]]
 
+nodesT1 = {
+    "A": [2, 0],
+    "B": [2, 1],
+    "C": [0, 3],
+    "D": [4, 3],
+    "E": [5, 1],
+}
 
+nodesT2 = {
+    "A": [0, 3],
+    "B": [2, 5],
+    "C": [3, 6],
+    "D": [6, 5],
+    "E": [4, 3],
+}
 """mazeCellsT1 = list([[[2, 0], [2, 1], [1, 2], [0, 3]],
                     [[2, 0], [2, 1], [3, 2], [4, 3]],
                     [[2, 0], [2, 1], [3, 1], [4, 1], [5, 1]]])
@@ -44,21 +58,22 @@ class CustomSettings():
             "octogonalMaze": True,
             "cellList": [mazeCellsT1, mazeCellsT2],
             "edgeList": [edgesT1, edgesT2],
-            "trial_nb": 0,
+            "nodeList": [nodesT1, nodesT2],
+            "nb_of_trials": 2,
             "resolution": 100
         }
 
         self.trajectorySettings = {
             "type": "point_to_point", #"random_walk", "point_to_point"
-            "n_traj": 5,
-            "n_steps": 10000,
+            "n_traj": [5, 2],
+            "n_steps": 1000,
             "step_size": 1 / 10,
-            "homes": [[2, 0], [3, 0]],
+            "homes": [[2, 0], [0, 3]],
             "goals": [[[4, 3], [4, 3], [5, 1]], [[3, 6], [6, 5], [4, 3]]]
         }
 
         self.firingSettings = {
-            "hyp": "euclidean",
+            "hyp": "graph", #"graph", "reward"
             "n_neurons": 100,
             "resolution": 100,
             "std": 0.7,

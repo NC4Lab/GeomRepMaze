@@ -28,18 +28,20 @@ class Maze():
         self.octoMazeBool = mazeSettings["octogonalMaze"] #a boolean to choose betwen octgonal or square maze grid
         #self.homes = mazeSettings["homes"]
         #self.goals = None
-        self.trial = mazeSettings["trial_nb"]
+        self.nb_of_trials = mazeSettings["nb_of_trials"]
         self.mazeRes = mazeSettings["resolution"]  # pixels per tile
         self.cellList = mazeSettings["cellList"]
         self.edgeList = mazeSettings["edgeList"]
+        self.nodeList = mazeSettings["nodeList"]
         #Maze config initialization
         self.fullSquareMaze = np.zeros((self.N, self.N), dtype=bool)
-        self.trialSquareMaze = np.zeros((self.N, self.N), dtype=bool)
+        self.trialSquareMaze = np.zeros((self.nb_of_trials,self.N, self.N), dtype=bool)
 
         self.fullOctoMaze = None
-        self.trialOctoMaze = None
-        self.fullMazeFlags = np.zeros([self.mazeRes*self.N, self.mazeRes*self.N], dtype = bool)
-        self.trialMazeFlags = np.zeros([self.mazeRes*self.N, self.mazeRes*self.N], dtype = bool)
+        self.fullOctoMaze = None
+        self.trialOctoMaze = []
+        self.fullMazeFlags = np.zeros([self.nb_of_trials, self.mazeRes*self.N, self.mazeRes*self.N], dtype = bool)
+        self.trialMazeFlags = np.zeros([self.nb_of_trials, self.mazeRes*self.N, self.mazeRes*self.N], dtype = bool)
 
 
         self.createFullMaze(mazeSettings)
@@ -121,81 +123,80 @@ class Maze():
         else:
             self.createTrialSquareMaze(mazeSettings, trial)
 
-    def createTrialSquareMaze(self, mazeSettings, trial):
-        if trial is None:
-            trial = mazeSettings["trial_nb"]
+    def createTrialSquareMaze(self, mazeSettings):
 
-        trialCells = mazeSettings["edgeList"][trial]
+        for i in range(mazeSettings["nb_of_trials"]):
+            trialCells = mazeSettings["edgeList"][i]
+            #self.trialSquareMaze[i, :, :] = np.fill([self.N, len(trialCells)], False)
 
-        self.trialSquareMaze = np.fill([self.N, len(trialCells)], False)
-        self.trialSquareMaze[tuple(np.asarray(trialCells).T)] = True
+            self.trialSquareMaze[i, tuple(np.asarray(trialCells).T)] = True
 
-        mazeFlags = np.repeat(self.trialSquareMaze, self.mazeRes, axis=1)
-        self.trialMazeFlags = np.repeat(mazeFlags, self.mazeRes, axis=0).T
+            mazeFlags = np.repeat(self.trialSquareMaze, self.mazeRes, axis=1)
+            self.trialMazeFlags[i, :, :] = np.repeat(mazeFlags, self.mazeRes, axis=0).T
 
     def createTrialOctoMaze(self, mazeSettings, trial):
-        if trial is None:
-            trial = mazeSettings["trial_nb"]
 
-        trialCells = mazeSettings["cellList"][mazeSettings["trial_nb"]]
-        trialEdges = mazeSettings["edgeList"][mazeSettings["trial_nb"]]
+        for n in range(mazeSettings["nb_of_trials"]):
 
-        polygonList = []
-        l = [(1 - 1 / (np.sqrt(2) + 1)) / 2, (1 + 1 / (np.sqrt(2) + 1)) / 2, 1,
-             3 / 2 - 1 / (2 * (np.sqrt(2) + 1))]  # used to define octogons
+            trialCells = mazeSettings["cellList"][n]
+            trialEdges = mazeSettings["edgeList"][n]
 
-        # create octogons
-        for i in range(len(trialCells)):
-            c = trialCells[i]
-            pol = create_octogon_from_point(c)
-            polygonList.append(pol)
+            polygonList = []
+            l = [(1 - 1 / (np.sqrt(2) + 1)) / 2, (1 + 1 / (np.sqrt(2) + 1)) / 2, 1,
+                 3 / 2 - 1 / (2 * (np.sqrt(2) + 1))]  # used to define octogons
 
-        # create squares
-        square = []
-        for i in range(len(trialEdges)):
-            c = trialEdges[i][0]
-            c_1 = trialEdges[i][1]
-            # TODO add function for square
+            # create octogons
+            for i in range(len(trialCells)):
+                c = trialCells[i]
+                pol = create_octogon_from_point(c)
+                polygonList.append(pol)
 
-            if np.linalg.norm(np.asarray(c) - np.asarray(c_1)) > 1:
-                if c[0] > c_1[0] and c[1] > c_1[1]:
-                    square = Polygon([np.add(c, [0, l[0]]), np.add(c, [l[0], 0]),
-                                      np.add(c, [0, -l[0]]), np.add(c, [-l[0], 0])])
-                elif c[0] > c_1[0] and c[1] < c_1[1]:
-                    square = Polygon([np.add(c, [0, l[1]]), np.add(c, [- l[0], 1]),
-                                      np.add(c, [0, l[3]]),
-                                      np.add(c, [l[0], 1])])
-                elif c[0] < c_1[0] and c[1] > c_1[1]:
-                    square = Polygon([np.add(c, [l[1], 0]), np.add(c, [1, l[0]]),
-                                      np.add(c, [l[3], 0]),
-                                      np.add(c, [1, - l[0]])])
-                elif c[0] < c_1[0] and c[1] < c_1[1]:
-                    square = Polygon([np.add(c, [l[1], 1]), np.add(c, [1, l[3]]),
-                                      np.add(c, [l[3], 1]),
-                                      np.add(c, [1, l[1]])])
-                else:
-                    print("WARNING empty square object!!")
+            # create squares
+            square = []
+            for i in range(len(trialEdges)):
+                c = trialEdges[i][0]
+                c_1 = trialEdges[i][1]
+                # TODO add function for square
 
-                polygonList.append(square)
+                if np.linalg.norm(np.asarray(c) - np.asarray(c_1)) > 1:
+                    if c[0] > c_1[0] and c[1] > c_1[1]:
+                        square = Polygon([np.add(c, [0, l[0]]), np.add(c, [l[0], 0]),
+                                          np.add(c, [0, -l[0]]), np.add(c, [-l[0], 0])])
+                    elif c[0] > c_1[0] and c[1] < c_1[1]:
+                        square = Polygon([np.add(c, [0, l[1]]), np.add(c, [- l[0], 1]),
+                                          np.add(c, [0, l[3]]),
+                                          np.add(c, [l[0], 1])])
+                    elif c[0] < c_1[0] and c[1] > c_1[1]:
+                        square = Polygon([np.add(c, [l[1], 0]), np.add(c, [1, l[0]]),
+                                          np.add(c, [l[3], 0]),
+                                          np.add(c, [1, - l[0]])])
+                    elif c[0] < c_1[0] and c[1] < c_1[1]:
+                        square = Polygon([np.add(c, [l[1], 1]), np.add(c, [1, l[3]]),
+                                          np.add(c, [l[3], 1]),
+                                          np.add(c, [1, l[1]])])
+                    else:
+                        print("WARNING empty square object!!")
 
-        # merge polygons and convert to path object
-        self.trialOctoMaze = Path(np.asarray(unary_union(polygonList).exterior.xy).T)
+                    polygonList.append(square)
 
-            # create binary flags for each pixels (either in or out maze tiles)
-        M = self.N * self.mazeRes
-        xv, yv = np.meshgrid(np.linspace(0, self.N, M), np.linspace(0, self.N, M))
-        binMaze = self.trialOctoMaze.contains_points(np.hstack((xv.flatten()[:, np.newaxis], yv.flatten()[:, np.newaxis])))
-        self.trialMazeFlags = binMaze.reshape(M, M)
+            # merge polygons and convert to path object
+            self.trialOctoMaze.append(Path(np.asarray(unary_union(polygonList).exterior.xy).T))
 
-    def isInMaze(self, x, y, mode = "trial"):
+                # create binary flags for each pixels (either in or out maze tiles)
+            M = self.N * self.mazeRes
+            xv, yv = np.meshgrid(np.linspace(0, self.N, M), np.linspace(0, self.N, M))
+            binMaze = self.trialOctoMaze[n].contains_points(np.hstack((xv.flatten()[:, np.newaxis], yv.flatten()[:, np.newaxis])))
+            self.trialMazeFlags[n, :, :] = binMaze.reshape(M, M)
+
+    def isInMaze(self, x, y, trial = None, mode = "trial"):
         """checks if the point in input is in the maze"""
 
         #Octogonal maze
         if self.octoMazeBool:
             if mode == "trial" and np.size(x) > 1:
-                return self.trialOctoMaze.contains_points(np.array([x, y]).T)
+                return self.trialOctoMaze[trial].contains_points(np.array([x, y]).T)
             elif mode == "trial" and np.size(x) == 1:
-                return self.trialOctoMaze.contains_point([x, y])
+                return self.trialOctoMaze[trial].contains_point([x, y])
             elif mode == "full" and np.size(x) > 1:
                 return self.fullOctoMaze.contains_points(np.array([x, y]).T)
             elif mode == "full" and np.size(x) == 1:
@@ -217,14 +218,14 @@ class Maze():
             return False
 
         if mode == "trial":
-            return self.trialSquareMaze[x_cor, y_cor] == 1
+            return self.trialSquareMaze[trial, x_cor, y_cor] == 1
 
         elif mode == "full":
             return self.fullSquareMaze[x_cor, y_cor] == 1
         else:
             print("Error: specify a valid mode")
 
-    def get_adjacent_points(self, x_coor, y_coor, d):
+    def get_adjacent_points(self, x_coor, y_coor, d, trial):
         """returns points adjacent to a point that are in the maze, given a displacement d"""
         K = 360 #number of adjacet points
 
@@ -233,7 +234,7 @@ class Maze():
         x_prov = x_coor + dx
         y_prov = y_coor + dy
 
-        inMazeIdx = self.isInMaze(x_prov, y_prov, mode="trial")
+        inMazeIdx = self.isInMaze(x_prov, y_prov, mode="trial", trial=trial)
 
         x = x_prov[inMazeIdx]
         y = y_prov[inMazeIdx]
