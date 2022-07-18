@@ -87,6 +87,7 @@ class NeuronsSpatialFiring:
             self.fieldCenters = np.column_stack([inMazeId[1][rndList]/self.res, inMazeId[0][rndList]/self.res])
             self.fieldCenters = np.repeat(self.fieldCenters[np.newaxis, :, :], maze.nb_of_trials, axis = 0).T
         return
+
     def fire(self, traj, maze): #TODO add option to chose firing fuction easily
         firing_rates = np.empty([traj.shape[1], self.n_neurons, maze.nb_of_trials])
         for i in range(maze.nb_of_trials):
