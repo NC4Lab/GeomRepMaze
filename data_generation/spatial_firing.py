@@ -85,6 +85,10 @@ class NeuronsSpatialFiring:
                     ortho_vec = ortho_vec/(np.linalg.norm(ortho_vec))
                     self.fieldCenters[:, j, i] = maze.nodeList[i][nodes[0]] + perc*n2n_vec + lat_d*ortho_vec + np.array([0.5, 0.5])
 
+                    if not maze.isInMaze(self.fieldCenters[:, j, i][0], self.fieldCenters[:, j, i][1], i):
+                        a = 1-2/np.sqrt(2)
+                        self.fieldCenters[:, j, i] = maze.nodeList[i][nodes[0]] + perc*n2n_vec + lat_d*ortho_vec*a + np.array([0.5, 0.5])
+
                     #self.fieldCenters[:, j, i] = maze.nodeList[i][nodes[0]] + perc*(np.asarray(maze.nodeList[i][nodes[1]]) - np.asarray(maze.nodeList[i][nodes[0]])) + np.array([0.5, 0.5])
 
         elif self.hyp == "euclidean":
