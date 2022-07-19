@@ -23,7 +23,7 @@ def noisy_gaussian(x, std, mus, p_max): #Todo move to utils
     fx = gaussian(x, std, mus, p_max)
     noise = np.random.normal(0,0.001*fx.max(),fx.size).reshape(fx.shape)#TODO add noise level as param
 
-    return fx #+ noise
+    return fx + noise
 
 def firing_proba(x, std, mus, p_max):
     K = std * np.sqrt(2 * np.pi) * p_max
@@ -74,12 +74,18 @@ class NeuronsSpatialFiring:
             #pick an edge and a percentage position on that edge
             firingFieldsEdges = np.random.choice(np.arange(n_edges), self.n_neurons)
             firingFieldsPercent = np.random.choice(np.arange(100), self.n_neurons)/100
-
+            latDelta = np.random.uniform(-0.5,0.5, self.n_neurons)
             for i in range(maze.nb_of_trials):
                 for j in range(self.n_neurons): ##TODO speed up (remove loop)
                     nodes = connectedNodes[firingFieldsEdges[j]]
                     perc = firingFieldsPercent[j]
-                    self.fieldCenters[:, j, i] = maze.nodeList[i][nodes[0]] + perc*(np.asarray(maze.nodeList[i][nodes[1]]) - np.asarray(maze.nodeList[i][nodes[0]])) + np.array([0.5, 0.5])
+                    lat_d = latDelta[j]
+                    n2n_vec = np.asarray(maze.nodeList[i][nodes[1]])-np.asarray(maze.nodeList[i][nodes[0]])
+                    ortho_vec = np.array([-n2n_vec[1], n2n_vec[0]])
+                    ortho_vec = ortho_vec/(np.linalg.norm(ortho_vec))
+                    self.fieldCenters[:, j, i] = maze.nodeList[i][nodes[0]] + perc*n2n_vec + lat_d*ortho_vec + np.array([0.5, 0.5])
+
+                    #self.fieldCenters[:, j, i] = maze.nodeList[i][nodes[0]] + perc*(np.asarray(maze.nodeList[i][nodes[1]]) - np.asarray(maze.nodeList[i][nodes[0]])) + np.array([0.5, 0.5])
 
         elif self.hyp == "euclidean":
             inMazeId = np.where(maze.fullMazeFlags == True)

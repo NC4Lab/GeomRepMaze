@@ -1,5 +1,0 @@
-experiment saved at: 18/07/2022 10:43:44
-hypothesis: graph
-trajectory type point_to_point
-number of maze config2
-number of neurons100

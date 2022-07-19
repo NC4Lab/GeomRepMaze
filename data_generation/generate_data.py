@@ -11,6 +11,7 @@ from settings.default_settings import DefaultSettings
 
 USE_CUSTOM_SETTINGS = 1
 PLOT = 1
+SAVE = 0
 
 ############################# Main ##########################################
 if __name__ == '__main__':
@@ -35,32 +36,32 @@ if __name__ == '__main__':
     print("generate firing rates")
     firingRates = placeCells.fire(np.array([traj.x_traj, traj.y_traj]), maze)
 
-    print("saving data")
+    if SAVE:
+        print("saving data")
+        ##save data
+        i = 0
+        while os.path.exists('./data_generation/generated_data/experiment%s' % i):
+            i += 1
+        os.mkdir('./data_generation/generated_data/experiment%s' % i)
 
-    ##save data
-    i = 0
-    while os.path.exists('./data_generation/generated_data/experiment%s' % i):
-        i += 1
-    os.mkdir('./data_generation/generated_data/experiment%s' % i)
+        lines = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                 "hypothesis: " + placeCells.hyp,
+                 "trajectory type: " + traj.traj_type,
+                 "number of maze config: " + str(maze.nb_of_trials),
+                 "number of neurons: " + str(placeCells.n_neurons)]
 
-    lines = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-             "hypothesis: " + placeCells.hyp,
-             "trajectory type: " + traj.traj_type,
-             "number of maze config: " + str(maze.nb_of_trials),
-             "number of neurons: " + str(placeCells.n_neurons)]
-
-    with open('./data_generation/generated_data/experiment%s/summary.txt' %i, 'w') as f:
-        for line in lines:
-            f.write(line)
-            f.write('\n')
+        with open('./data_generation/generated_data/experiment%s/summary.txt' %i, 'w') as f:
+            for line in lines:
+                f.write(line)
+                f.write('\n')
 
 
-    with open('./data_generation/generated_data/experiment%s/trajectory.pkl' % i, 'wb') as outp:
-        pickle.dump(traj, outp, pickle.HIGHEST_PROTOCOL)
-    with open('./data_generation/generated_data/experiment%s/placeCells.pkl' % i, 'wb') as outp:
-        pickle.dump(maze, outp, pickle.HIGHEST_PROTOCOL)
-    with open('./data_generation/generated_data/experiment%s/maze.pkl' % i, 'wb') as outp:
-        pickle.dump(maze, outp, pickle.HIGHEST_PROTOCOL)
+        with open('./data_generation/generated_data/experiment%s/trajectory.pkl' % i, 'wb') as outp:
+            pickle.dump(traj, outp, pickle.HIGHEST_PROTOCOL)
+        with open('./data_generation/generated_data/experiment%s/placeCells.pkl' % i, 'wb') as outp:
+            pickle.dump(maze, outp, pickle.HIGHEST_PROTOCOL)
+        with open('./data_generation/generated_data/experiment%s/maze.pkl' % i, 'wb') as outp:
+            pickle.dump(maze, outp, pickle.HIGHEST_PROTOCOL)
 
 
 

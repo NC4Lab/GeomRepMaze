@@ -73,7 +73,7 @@ class CustomSettings():
         }
 
         self.firingSettings = {
-            "hyp": "graph", #"graph", "reward"
+            "hyp": "graph", #"euclidean", "graph", "reward"
             "n_neurons": 100,
             "resolution": 100,
             "std": 0.7,
