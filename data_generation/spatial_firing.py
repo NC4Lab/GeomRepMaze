@@ -46,6 +46,7 @@ class NeuronsSpatialFiring:
         self.hyp = firingSettings["hyp"]
 
         self.fieldCenters = None
+        self.firingRates = None
 
     def generateFiringFields(self, maze):
 
@@ -99,12 +100,14 @@ class NeuronsSpatialFiring:
         return
 
     def fire(self, traj, maze): #TODO add option to chose firing fuction easily
-        firing_rates = np.empty([traj.shape[1], self.n_neurons, maze.nb_of_trials])
-        for i in range(maze.nb_of_trials):
-            firing_rates[:, :, i] = noisy_gaussian(traj, self.std, self.fieldCenters[:, :, i], 0.99)
+        self.firingRates = np.empty([traj.x_traj.shape[0], self.n_neurons])
+        idx = traj.traj_cut_idx
+
+        for i in range(sum(traj.n_traj)):
+            self.firingRates[idx[i]:idx[i+1], :] = noisy_gaussian(np.array([traj.x_traj[idx[i]:idx[i+1]], traj.y_traj[idx[i]:idx[i+1]]]), self.std, self.fieldCenters[:, :, traj.corr_maze_config[i]], 0.99)
         #spikes = firing_proba(traj, self.std, self.fieldCenters, p_max = 0.99)
 
-        return firing_rates
+        return self.firingRates
 
 
 

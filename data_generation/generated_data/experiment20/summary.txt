@@ -1,0 +1,5 @@
+21/07/2022 14:20:22
+hypothesis: graph
+trajectory type: point_to_point
+number of maze config: 2
+number of neurons: 100

@@ -66,14 +66,14 @@ class CustomSettings():
         self.trajectorySettings = {
             "type": "point_to_point", #"random_walk", "point_to_point"
             "n_traj": [5, 2],
-            "n_steps": 1000,
+            "n_steps": 1000, #only used for random walk
             "step_size": 1 / 10,
             "homes": [[2, 0], [0, 3]],
             "goals": [[[4, 3], [4, 3], [5, 1]], [[3, 6], [6, 5], [4, 3]]]
         }
 
         self.firingSettings = {
-            "hyp": "graph", #"euclidean", "graph", "reward"
+            "hyp": "euclidean", #"euclidean", "graph", "reward"
             "n_neurons": 100,
             "resolution": 100,
             "std": 0.7,

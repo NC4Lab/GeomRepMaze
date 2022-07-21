@@ -52,6 +52,7 @@ class Trajectory:
                 self.x_traj.append(path[0, 0])
                 self.y_traj.append(path[0, 1])
 
+
                 if n == 0:
                     self.traj_cut_idx[i] = int(k)
                 else:
@@ -88,6 +89,7 @@ class Trajectory:
             #k = k + 1
         self.x_traj = np.asarray(self.x_traj).T
         self.y_traj = np.asarray(self.y_traj).T
+        self.traj_cut_idx[-1] = len(self.x_traj)
 
         return
 
