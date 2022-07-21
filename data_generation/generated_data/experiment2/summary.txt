@@ -1,5 +1,0 @@
-21/07/2022 13:00:01
-hypothesis: euclidean
-trajectory type: point_to_point
-number of maze config: 2
-number of neurons: 100
