@@ -3,29 +3,27 @@ import random
 from matplotlib import pyplot as plt
 from data_generation.graph import build_graph, BFS_SP
 
-def gaussian(x, std, mus, p_max): #Todo move to utils
+def gaussian(d, std, p_max): #Todo move to utils
     K = std*np.sqrt(2*np.pi)*p_max
-    mus_resh = np.repeat(mus[:, np.newaxis, :], x.shape[1], axis=1)
-    x_resh = x
+    #mus_resh = np.repeat(mus[:, np.newaxis, :], x.shape[1], axis=1)
+    #x_resh = x
 
-    mat = x_resh[:, :, np.newaxis] - mus_resh
+    #mat = x_resh[:, :, np.newaxis] - mus_resh
     #mat = np.empty(mus_resh.shape)
-    """for i in range(mat.shape[1]):
-        for j in range(mat.shape[2]):
-            mat[:, i, j] = x_resh[:, i] - mus_resh[:, i, j]"""
 
-    deltas = np.linalg.norm(mat, axis=0)
 
-    fx =  K/(std * np.sqrt(2 * np.pi)) * np.exp(-0.5 * np.square(deltas / std)) #TODO replace by pmax
+    #deltas = np.linalg.norm(mat, axis=0)
+
+    fx =  K/(std * np.sqrt(2 * np.pi)) * np.exp(-0.5 * np.square(d / std)) #TODO replace by pmax
     return fx
 
-def noisy_gaussian(x, std, mus, p_max): #Todo move to utils
-    fx = gaussian(x, std, mus, p_max)
+def noisy_gaussian(d, std, p_max): #Todo move to utils
+    fx = gaussian(d, std, p_max)
     noise = np.random.normal(0,0.001*fx.max(),fx.size).reshape(fx.shape)#TODO add noise level as param
 
     return fx + noise
 
-def firing_proba(x, std, mus, p_max):
+"""def firing_proba(x, std, mus, p_max):
     K = std * np.sqrt(2 * np.pi) * p_max
     x_resh = np.moveaxis(x, 0, 2)
     x_2d = np.reshape(x_resh, [x_resh.shape[0] * x_resh.shape[1], x_resh.shape[2]])
@@ -35,7 +33,7 @@ def firing_proba(x, std, mus, p_max):
     for i in range(spikes.shape[0]): ##TODO: this loop is very slow
         for j in range(spikes.shape[1]):
             spikes[i, j] = np.random.choice([0, 1], p = [1 - spiking_prob[i, j], spiking_prob[i, j]])
-    return spikes
+    return spikes"""
 
 class NeuronsSpatialFiring:
 
@@ -99,18 +97,33 @@ class NeuronsSpatialFiring:
             self.fieldCenters = np.repeat(self.fieldCenters[np.newaxis, :, :], maze.nb_of_trials, axis = 0).T
         return
 
+    def distance(self, maze, x, centers):
+
+        centers_resh = np.repeat(centers[:, np.newaxis, :], x.shape[1], axis=1)
+
+        if self.hyp == "euclidean":
+            mat = x[:, :, np.newaxis] - centers_resh
+            d= np.linalg.norm(mat, axis=0)
+
+        elif self.hyp == "graph":
+            d = 0
+
+        else:
+            print("ERROR: hypothesis non-valid")
+            return
+
+        return d
+
     def fire(self, traj, maze): #TODO add option to chose firing fuction easily
-        self.firingRates = np.empty([traj.x_traj.shape[0], self.n_neurons])
+        self.firingRates = np.empty([traj.x_traj.shape[0], self.n_neurons], )
         idx = traj.traj_cut_idx
 
         for i in range(sum(traj.n_traj)):
-            self.firingRates[idx[i]:idx[i+1], :] = noisy_gaussian(np.array([traj.x_traj[idx[i]:idx[i+1]], traj.y_traj[idx[i]:idx[i+1]]]), self.std, self.fieldCenters[:, :, traj.corr_maze_config[i]], 0.99)
+            X = np.array([traj.x_traj[idx[i]:idx[i+1]], traj.y_traj[idx[i]:idx[i+1]]])
+            d = self.distance(maze, X,  self.fieldCenters[:, :, traj.corr_maze_config[i]])
+            self.firingRates[idx[i]:idx[i+1], :] = noisy_gaussian(d, self.std, 0.99)
         #spikes = firing_proba(traj, self.std, self.fieldCenters, p_max = 0.99)
 
         return self.firingRates
-
-
-
-
 
 

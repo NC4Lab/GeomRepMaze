@@ -83,8 +83,8 @@ if __name__ == '__main__':
             plt.xlim([0, maze.N])
             plt.ylim([0, maze.N])
             plt.grid()
-            plt.scatter(placeCells.fieldCenters[0, :, i], placeCells.fieldCenters[1, :, i], c=c, marker='*',
-                        cmap='Reds', label="place field centers")
+            plt.scatter(placeCells.fieldCenters[0, :, i], placeCells.fieldCenters[1, :, i], marker='*',
+                        c='r', label="place field centers")
 
             plt.legend()
             plt.imshow(maze.trialMazeFlags[i, ::-1], cmap='Greens', extent=[0, maze.N, 0, maze.N])

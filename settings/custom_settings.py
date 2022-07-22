@@ -74,7 +74,7 @@ class CustomSettings():
 
         self.firingSettings = {
             "hyp": "euclidean", #"euclidean", "graph", "reward"
-            "n_neurons": 100,
+            "n_neurons": 3,
             "resolution": 100,
             "std": 0.7,
         }
