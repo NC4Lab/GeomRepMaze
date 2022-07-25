@@ -1,7 +1,8 @@
 import numpy as np
 import random
+import math
 from matplotlib import pyplot as plt
-from data_generation.graph import build_graph, BFS_SP
+from data_generation.graph import build_graph, BFS_SP, compute_path_distance
 
 def gaussian(d, std, p_max): #Todo move to utils
     K = std*np.sqrt(2*np.pi)*p_max
@@ -51,7 +52,7 @@ class NeuronsSpatialFiring:
         if self.hyp == "graph":
             self.fieldCenters = np.empty([2, self.n_neurons, maze.nb_of_trials])
 
-            #get directly connected nodes (=nb of edges)
+            """#get directly connected nodes (=nb of edges)
             connectedNodes = []
 
             graph = build_graph(maze.edgeList[0])
@@ -66,17 +67,19 @@ class NeuronsSpatialFiring:
                         if (np.array(path) == n).all(axis = -1).any():
                             common_el = common_el + 1
                     if common_el == 2:
-                        connectedNodes.append([keys[j], keys[k]])
+                        connectedNodes.append([keys[j], keys[k]])"""
 
-            n_edges = len(connectedNodes)
+            n_edges = len(maze.connectedNodes)
 
             #pick an edge and a percentage position on that edge
             firingFieldsEdges = np.random.choice(np.arange(n_edges), self.n_neurons)
             firingFieldsPercent = np.random.choice(np.arange(100), self.n_neurons)/100
             latDelta = np.random.uniform(-0.5,0.5, self.n_neurons)
+
+            #place firing fields
             for i in range(maze.nb_of_trials):
                 for j in range(self.n_neurons): ##TODO speed up (remove loop)
-                    nodes = connectedNodes[firingFieldsEdges[j]]
+                    nodes = maze.connectedNodes[firingFieldsEdges[j]]
                     perc = firingFieldsPercent[j]
                     lat_d = latDelta[j]
                     n2n_vec = np.asarray(maze.nodeList[i][nodes[1]])-np.asarray(maze.nodeList[i][nodes[0]])
@@ -97,16 +100,50 @@ class NeuronsSpatialFiring:
             self.fieldCenters = np.repeat(self.fieldCenters[np.newaxis, :, :], maze.nb_of_trials, axis = 0).T
         return
 
-    def distance(self, maze, x, centers):
+    def distance(self, maze, maze_config, x, centers):
 
         centers_resh = np.repeat(centers[:, np.newaxis, :], x.shape[1], axis=1)
 
         if self.hyp == "euclidean":
+            #compute euclidan distance
             mat = x[:, :, np.newaxis] - centers_resh
             d= np.linalg.norm(mat, axis=0)
+            print("dfwd")
 
         elif self.hyp == "graph":
-            d = 0
+            #compute graph distance
+
+            cellList = np.asarray(maze.cellList[maze_config]).T+0.5
+
+            #get tiles including traj and place fields positions
+            cellList_resh = np.repeat(cellList[:, :, np.newaxis], x.shape[1], axis = 2)
+            mat = x[:, np.newaxis, :] - cellList_resh ##tODO function for that
+            d_to_tiles = np.linalg.norm(mat, axis=0)
+            x_tiles_mapping = np.argmin(d_to_tiles, axis = 0)
+
+            cellList_resh = np.repeat(cellList[:, :, np.newaxis], centers.shape[1], axis = 2)
+            mat = centers[:, np.newaxis, :] - cellList_resh  ##tODO function for that
+            d_to_tiles = np.linalg.norm(mat, axis=0)
+            c_tiles_mapping = np.argmin(d_to_tiles, axis=0)
+
+            graph = build_graph(maze.edgeList[maze_config])
+
+            cellArray = np.array(maze.cellList[maze_config])
+            xCells = cellArray[x_tiles_mapping]
+            cCells = cellArray[c_tiles_mapping]
+
+            paths = []
+            d = np.zeros([len(xCells), len(cCells)])
+            for i in range(len(xCells)):
+                for j in range(len(cCells)):
+                    path = BFS_SP(graph, list(xCells[i]), list(cCells[j]))
+                    if path is not None:
+                        path[0] = list(x[:, i])
+                        path[-1] = list(centers[:, j])
+                    else:
+                        path = [list(x[:, i]), list(centers[:, j])]
+                    d[i, j] = compute_path_distance(path)
+
 
         else:
             print("ERROR: hypothesis non-valid")
@@ -120,7 +157,8 @@ class NeuronsSpatialFiring:
 
         for i in range(sum(traj.n_traj)):
             X = np.array([traj.x_traj[idx[i]:idx[i+1]], traj.y_traj[idx[i]:idx[i+1]]])
-            d = self.distance(maze, X,  self.fieldCenters[:, :, traj.corr_maze_config[i]])
+            maze_config = traj.corr_maze_config[i]
+            d = self.distance(maze, maze_config, X,  self.fieldCenters[:, :, maze_config])
             self.firingRates[idx[i]:idx[i+1], :] = noisy_gaussian(d, self.std, 0.99)
         #spikes = firing_proba(traj, self.std, self.fieldCenters, p_max = 0.99)
 

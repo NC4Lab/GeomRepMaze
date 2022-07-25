@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+import math
 
 # Function to build the graph
 def build_graph(edges):
@@ -57,3 +57,15 @@ def BFS_SP(graph, start, goal):
     # are not connected
     print("So sorry, but a connecting path doesn't exist :(")
     return None
+
+
+def compute_path_distance(path):
+
+    if path == None:
+        return 0
+
+    d = 0
+    for i in range(len(path)-1):
+        d = d + math.dist(path[i], path[i+1])
+
+    return d

@@ -81,12 +81,7 @@ class Trajectory:
                         self.x_traj.append(nextPos[0])
                         self.y_traj.append(nextPos[1])
                         k = k+1
-                        """self.x_traj[i, t] = next[0]
-                        self.y_traj[i, t] = next[1]"""
 
-
-
-            #k = k + 1
         self.x_traj = np.asarray(self.x_traj).T
         self.y_traj = np.asarray(self.y_traj).T
         self.traj_cut_idx[-1] = len(self.x_traj)
@@ -142,7 +137,6 @@ class Trajectory:
                     self.y_traj[k] = next[1]
                     k = k+1
                     i = i+1
-
 
         return
 

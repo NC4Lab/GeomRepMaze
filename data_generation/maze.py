@@ -4,6 +4,7 @@ from matplotlib.path import Path
 from matplotlib import pyplot as plt
 from shapely.ops import unary_union
 from shapely.geometry.polygon import Polygon
+from data_generation.graph import build_graph, BFS_SP
 
 
 def create_octogon_from_point(p): ##Todo move to utils or geom
@@ -45,6 +46,31 @@ class Maze():
 
 
         self.createFullMaze(mazeSettings)
+        self.connectedNodes,  self.edgeTiles = self.get_connected_nodes()
+
+
+    def get_connected_nodes(self):
+
+        connectedNodes = []
+        edgeTiles = []
+
+        graph = build_graph(self.edgeList[0])
+        keys = sorted(self.nodeList[0].keys())
+        nodeList = self.nodeList[0]
+
+        for j in range(len(nodeList) - 1):
+            for k in np.arange(j + 1, len(nodeList)):
+                path = BFS_SP(graph, nodeList[keys[j]], nodeList[keys[k]])
+                common_el = 0
+                for n in nodeList.values():
+                    if (np.array(path) == n).all(axis=-1).any():
+                        common_el = common_el + 1
+                if common_el == 2:
+                    connectedNodes.append([keys[j], keys[k]])
+                    edgeTiles.append(path)
+
+        return connectedNodes, edgeTiles
+
 
     def createFullMaze(self, mazeSettings):
         """create a maze"""
