@@ -26,8 +26,8 @@ def BFS_SP(graph, start, goal):
     # If the desired node is
     # reached
     if start == goal:
-        print("Same Node")
-        return
+        #print("Same Node")
+        return None
 
     # Loop to traverse the graph
     # with the help of the queue

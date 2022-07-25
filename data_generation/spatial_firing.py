@@ -40,7 +40,6 @@ class NeuronsSpatialFiring:
 
     def __init__(self, firingSettings): #Todo add gaussian shapes + max
         self.n_neurons = firingSettings["n_neurons"]
-        self.res = firingSettings["resolution"]
         self.std = firingSettings["std"]
         self.hyp = firingSettings["hyp"]
 
@@ -96,7 +95,7 @@ class NeuronsSpatialFiring:
         elif self.hyp == "euclidean":
             inMazeId = np.where(maze.fullMazeFlags == True)
             rndList = random.sample(list(np.arange(0, len(inMazeId[0]))), self.n_neurons)
-            self.fieldCenters = np.column_stack([inMazeId[1][rndList]/self.res, inMazeId[0][rndList]/self.res])
+            self.fieldCenters = np.column_stack([inMazeId[1][rndList]/maze.res, inMazeId[0][rndList]/maze.res])
             self.fieldCenters = np.repeat(self.fieldCenters[np.newaxis, :, :], maze.nb_of_trials, axis = 0).T
         return
 

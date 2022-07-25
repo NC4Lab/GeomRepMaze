@@ -9,9 +9,9 @@ from data_generation.spatial_firing import NeuronsSpatialFiring
 from settings.custom_settings import CustomSettings
 from settings.default_settings import DefaultSettings
 
-USE_CUSTOM_SETTINGS = 1
-PLOT = 1
-SAVE = 1
+USE_CUSTOM_SETTINGS = True
+PLOT = True
+SAVE = True
 
 ############################# Main ##########################################
 def generate_data(s):
