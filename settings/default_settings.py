@@ -57,7 +57,9 @@ class DefaultSettings():
             "n_steps": 1000,
             "step_size": 1 / 10,
             "homes": [[2, 0], [0, 3]],
-            "goals": [[[4, 3], [4, 3], [5, 1]], [[3, 6], [6, 5], [4, 3]]]
+            "goals": [[[4, 3], [4, 3], [5, 1]], [[3, 6], [6, 5], [4, 3]]],
+            "p_drift": 0.15
+
         }
 
         self.firingSettings = {

@@ -18,6 +18,7 @@ class Trajectory:
         self.d = trajSettings["step_size"]
         self.homes = trajSettings["homes"]
         self.goals = trajSettings["goals"]
+        self.p_drift = trajSettings["p_drift"]
 
     def generate_trajectory(self, maze):
         if self.traj_type == "random_walk":
@@ -31,48 +32,52 @@ class Trajectory:
 
 
     def generate_p2p_trajectory(self, maze):
-        p_drift = 0.15
-        self.x_traj = [] #np.empty(n_traj)#np.zeros([self.n_traj, 10000])
-        self.y_traj = [] #np.zeros([self.n_traj, 10000])
+        self.x_traj = []
+        self.y_traj = []
 
+        #extract maze configurations for each trajectory
         self.corr_maze_config[0:self.n_traj[0]] = 0
         for i in np.arange(maze.nb_of_trials - 1) + 1:
             self.corr_maze_config[sum(self.n_traj[0:i]):sum(self.n_traj[0:i + 1])] = i
 
-        k = 0 #TODO remove k variable and use n*i*j
-
+        k = 0
         for n in range(maze.nb_of_trials):
+            #get path from home to goal
             graph = build_graph(maze.edgeList[n])
             start = self.homes[n]
             goal = self.goals[n][0]
 
             path = np.asarray(BFS_SP(graph, start, goal))
             path = np.add(path, 0.5)
+
             for i in range(self.n_traj[n]):
+                #starting position
                 self.x_traj.append(path[0, 0])
                 self.y_traj.append(path[0, 1])
 
-
+                #store index where trajectory starts
                 if n == 0:
                     self.traj_cut_idx[i] = int(k)
                 else:
                     self.traj_cut_idx[n * self.n_traj[n - 1] + i] = int(k)
                 k = k+1
 
+                #generate trajectory
                 for j in range(len(path)-1):
                     while np.linalg.norm(path[j + 1] - [self.x_traj[-1], self.y_traj[-1]]) > 0.1:
                         validNextX, validNextY = maze.get_adjacent_points(self.x_traj[k-1], self.y_traj[k-1],
                                                                           self.d, trial = n)
                         validNext = np.column_stack([validNextX, validNextY])
 
-                        vToGoal = path[j+1] - np.array([self.x_traj[k-1], self.y_traj[k-1]])
+                        vToGoal = path[j+1] - np.array([self.x_traj[k-1], self.y_traj[k-1]]) #vector from current pos to goal
                         vToGoal = vToGoal/np.linalg.norm(vToGoal)*self.d
                         driftPos = np.array([self.x_traj[k-1], self.y_traj[k-1]]) + vToGoal
 
+                        #randomly choose next position among possible adjacent positions
                         if maze.isInMaze(self.x_traj[k-1] + vToGoal[0], self.y_traj[k-1] + vToGoal[1], trial=n):
                             validNext = np.row_stack([validNext, driftPos])
-                            prob = np.ones(len(validNext))*((1-p_drift)/(len(validNext)-1))
-                            prob[-1] = p_drift
+                            prob = np.ones(len(validNext))*((1-self.p_drift)/(len(validNext)-1))
+                            prob[-1] = self.p_drift
                             idxNext = np.random.choice(np.arange(len(validNext)), p = prob)
                         else:
                             idxNext = random.choice(np.arange(len(validNext)))
@@ -93,6 +98,7 @@ class Trajectory:
         self.x_traj = np.zeros(self.n_steps * sum(self.n_traj))
         self.y_traj = np.zeros(self.n_steps * sum(self.n_traj))
 
+        #extract maze configuration id for each trajectory
         self.corr_maze_config[0:self.n_traj[0]] = 0
         for i in np.arange(maze.nb_of_trials-1)+1:
             self.corr_maze_config[sum(self.n_traj[0:i]):sum(self.n_traj[0:i+1])] = i
