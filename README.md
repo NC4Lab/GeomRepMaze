@@ -19,18 +19,25 @@ Custom settings can be defined in **settings/custom_settings.py**:
 - edgeList: lists of connected cells (one list per maze configuration)
 - nodeList: list of node cells (one list per maze configuration)
 - nb_of_trials: number of maze configuration. Shall be consistent with cellList, edgeList and nodeList.
+- homes: list of home positions for each maze configuration
+- goals: list of goal positions for each maze configuration
 - resolution: pixel width of each cell. The resolution is involved in computations to find out whether a point is contained in a cell. 
 #### trajectory settings
 - type: "point_to_point" or "random_walk"
 - n_traj: list containinf the number of trajectories generated per maze configuration
 - n_steps: number of steps per trajectory (only for random walk)
 - step_size
-- homes: list of home positions for each maze configuration
-- goals: list of goal positions for each maze configuration
+- p_drift: strength of the drift towards goal positiom (between 0 and 1. 0 gives random walk, 1 gives direct trajectory to the goal node)
+- angular_res: angule resolution of the trajectory, i.e. number of directions the rat can move toward. 
+- speed_variabilty: variability of the step size (in percentage of _step_size_)
+
 #### firing settings
 - hyp: hypothesis. "euclidean" or "graph"
 - n_neurons: number of neurons (place cells)
 - std: std of the gaussian function (for firing rate computation)
+- nu_max: max firing rate of the neurons
+- noise_on_rate: noise level on the firing rates (in percentage of the max firing rate)
+- noise_on_field: noise on place field centers' positions. For each place field center coordinate, the noise is randomly (uniform dist) chosen between -noise_on_field and +noise_on_field.
 
 
 
