@@ -24,7 +24,8 @@ class NeuronsSpatialFiring:
         self.std = firingSettings["std"]
         self.hyp = firingSettings["hyp"]
         self.nu_max = firingSettings["nu_max"]
-        self.noise = firingSettings["noise"]
+        self.rate_noise = firingSettings["noise_on_rate"]
+        self.field_noise = firingSettings["noise_on_field"]
         self.fieldCenters = None
         self.firingRates = None
 
@@ -61,6 +62,9 @@ class NeuronsSpatialFiring:
             rndList = random.sample(list(np.arange(0, len(inMazeId[0]))), self.n_neurons)
             self.fieldCenters = np.column_stack([inMazeId[1][rndList]/maze.mazeRes, inMazeId[0][rndList]/maze.mazeRes])
             self.fieldCenters = np.repeat(self.fieldCenters[np.newaxis, :, :], maze.nb_of_trials, axis = 0).T
+
+        noise = np.random.uniform(-self.field_noise, self.field_noise, self.fieldCenters.shape)
+        self.fieldCenters = self.fieldCenters + noise
 
         return
 
@@ -113,7 +117,7 @@ class NeuronsSpatialFiring:
             X = np.array([traj.x_traj[idx[i]:idx[i+1]], traj.y_traj[idx[i]:idx[i+1]]])
             maze_config = traj.corr_maze_config[i]
             d = self.distance(maze, maze_config, X,  self.fieldCenters[:, :, maze_config])
-            self.firingRates[idx[i]:idx[i+1], :] = noisy_gaussian(d, self.std, self.nu_max, self.noise)
+            self.firingRates[idx[i]:idx[i+1], :] = noisy_gaussian(d, self.std, self.nu_max, self.rate_noise)
 
         return self.firingRates
 
