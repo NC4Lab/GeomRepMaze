@@ -7,7 +7,11 @@ The folder **data_generation/** contains the code to generate sythetic data. Run
 The following paramaters can be changed at the top of the file:
 - USE_CUSTOM_SETTINGS: if set to 1, custom settings are used. If set to 0, default settings are used-
 - PLOT: Whether to display the synthetized data
-- SAVE: Whether to save the synthetized data. The data is saved in the folder _generated_data/_
+- SAVE: Whether to save the synthetized data. 
+
+### Saving 
+The data is saved in the folder _generated_data/_. 
+Three class objects (corresponding to trajectory, maze and place cells) are saved as .pkl files. A summary text file is added to each experiment; it contains information about the time of the experiment and the main settings.
 
 ### Settings
 
