@@ -11,7 +11,8 @@ The following paramaters can be changed at the top of the file:
 
 ### Saving 
 The data is saved in the folder _generated_data/_. 
-Three class objects (corresponding to trajectory, maze and place cells) are saved as .pkl files. A summary text file is added to each experiment; it contains information about the time of the experiment and the main settings.
+
+For each experiment, three class objects (corresponding to trajectory, maze and place cells) are saved as .pkl files and a summary text file is generated. The summary file contains information about the time of the experiment and the main settings.
 
 ### Settings
 
