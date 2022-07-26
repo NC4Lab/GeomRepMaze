@@ -59,24 +59,26 @@ class CustomSettings():
             "cellList": [mazeCellsT1, mazeCellsT2],
             "edgeList": [edgesT1, edgesT2],
             "nodeList": [nodesT1, nodesT2],
+            "homes": [[2, 0], [0, 3]],
+            "goals": [[[4, 3], [4, 3], [5, 1]], [[3, 6], [6, 5], [4, 3]]],
             "nb_of_trials": 2,
             "resolution": 100
         }
 
         self.trajectorySettings = {
-            "type": "point_to_point", #"random_walk", "point_to_point"
+            "type": "random_walk", #"random_walk", "point_to_point"
             "n_traj": [5, 2],
             "n_steps": 1000, #only used for random walk
             "step_size": 1 / 10,
-            "homes": [[2, 0], [0, 3]],
-            "goals": [[[4, 3], [4, 3], [5, 1]], [[3, 6], [6, 5], [4, 3]]],
-            "p_drift": 0.15
+            "p_drift": 0.15,
+            "angular_res": 360
         }
 
         self.firingSettings = {
-            "hyp": "graph", #"euclidean", "graph", "reward"
+            "hyp": "euclidean", #"euclidean", "graph", "reward"
             "n_neurons": 3,
             "std": 0.7,
+            "nu_max": 1000
         }
 
         self.modelSettings = {
