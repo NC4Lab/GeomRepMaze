@@ -11,7 +11,7 @@ from settings.default_settings import DefaultSettings
 
 USE_CUSTOM_SETTINGS = True
 PLOT = True
-SAVE = True
+SAVE = False
 
 ############################# Main ##########################################
 def save_data():

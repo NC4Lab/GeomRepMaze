@@ -18,6 +18,7 @@ class Trajectory:
         self.d = trajSettings["step_size"]
         self.p_drift = trajSettings["p_drift"]
         self.angular_res = trajSettings["angular_res"]
+        self.speed_var = trajSettings["speed_variability"]
 
     def generate_trajectory(self, maze):
         if self.traj_type == "random_walk":
@@ -63,13 +64,16 @@ class Trajectory:
 
                 #generate trajectory
                 for j in range(len(path)-1):
-                    while np.linalg.norm(path[j + 1] - [self.x_traj[-1], self.y_traj[-1]]) > 0.1:
+                    while np.linalg.norm(path[j + 1] - [self.x_traj[-1], self.y_traj[-1]]) > 0.1: #TODO 0.1 as param
+                        var = random.uniform(-self.speed_var, self.speed_var)
+                        d = self.d + var*self.d
+
                         validNextX, validNextY = maze.get_adjacent_points(self.x_traj[k-1], self.y_traj[k-1],
-                                                                          self.d, self.angular_res, trial = n)
+                                                                          d, self.angular_res, trial = n)
                         validNext = np.column_stack([validNextX, validNextY])
 
                         vToGoal = path[j+1] - np.array([self.x_traj[k-1], self.y_traj[k-1]]) #vector from current pos to goal
-                        vToGoal = vToGoal/np.linalg.norm(vToGoal)*self.d
+                        vToGoal = vToGoal/np.linalg.norm(vToGoal)*d
                         driftPos = np.array([self.x_traj[k-1], self.y_traj[k-1]]) + vToGoal
 
                         #randomly choose next position among possible adjacent positions
@@ -126,7 +130,9 @@ class Trajectory:
 
                 #generate random trajectory with constant displacement (rnd walk)
                 while i < self.n_steps:
-                    validNextX, validNextY = maze.get_adjacent_points(self.x_traj[k-1], self.y_traj[k-1], self.d, self.angular_res, trial = n)
+                    var = random.uniform(-self.speed_var, self.speed_var)
+                    d = self.d + var*self.d
+                    validNextX, validNextY = maze.get_adjacent_points(self.x_traj[k-1], self.y_traj[k-1], d, self.angular_res, trial = n)
                     validNext = np.column_stack([validNextX, validNextY])
                     next = random.choice(validNext)
                     self.x_traj[k] = next[0]

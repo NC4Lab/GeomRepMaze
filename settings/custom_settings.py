@@ -1,4 +1,3 @@
-import numpy as np
 
 mazeCellsT1 = list([[2, 0], [2, 1], [1, 2], [0, 3], [3, 2], [4, 3], [3, 1], [4, 1], [5, 1]])
 mazeCellsT2 = list([[0, 3], [1, 4], [2, 5], [3, 6], [3, 5], [4, 5], [5, 5], [6, 5],
@@ -57,16 +56,6 @@ nodesT3 = {
     "D": [4, 3],
     "E": [3, 6],
 }
-"""mazeCellsT1 = list([[[2, 0], [2, 1], [1, 2], [0, 3]],
-                    [[2, 0], [2, 1], [3, 2], [4, 3]],
-                    [[2, 0], [2, 1], [3, 1], [4, 1], [5, 1]]])
-mazeCellsT2 = list([[[0, 3], [1, 4], [2, 5], [3, 6]],
-                    [[0, 3], [1, 4], [2, 5], [3, 5], [4, 5], [5, 5], [6, 5]],
-                    [[0, 3], [1, 4], [2, 5], [3, 4], [4, 3]]])
-mazeCellsT3 = list([[[6, 5], [5, 4], [5, 3], [5, 2], [5, 1]],
-                    [[6, 5], [5, 4], [4, 3]],
-                    [[6, 5], [5, 4], [4, 5], [3, 6]]])
-"""
 
 class CustomSettings():
 
@@ -84,12 +73,13 @@ class CustomSettings():
         }
 
         self.trajectorySettings = {
-            "type": "point_to_point", #"random_walk", "point_to_point"
+            "type": "random_walk", #"random_walk", "point_to_point"
             "n_traj": [5, 5, 5],
             "n_steps": 1000, #only used for random walk
             "step_size": 1 / 10,
             "p_drift": 0.15,
-            "angular_res": 360
+            "angular_res": 360,
+            "speed_variability": 0.5
         }
 
         self.firingSettings = {
