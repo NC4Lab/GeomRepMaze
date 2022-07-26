@@ -9,18 +9,73 @@ from data_generation.spatial_firing import NeuronsSpatialFiring
 from settings.custom_settings import CustomSettings
 from settings.default_settings import DefaultSettings
 
-USE_CUSTOM_SETTINGS = 1
-PLOT = 1
-SAVE = 0
+USE_CUSTOM_SETTINGS = True
+PLOT = True
+SAVE = False
 
 ############################# Main ##########################################
-if __name__ == '__main__':
-    print("START")
+def save_data():
+    print("saving data")
+    ##save data
+    i = 0
+    while os.path.exists('./data_generation/generated_data/experiment%s' % i):
+        i += 1
+    os.mkdir('./data_generation/generated_data/experiment%s' % i)
 
-    if USE_CUSTOM_SETTINGS:
-        s = CustomSettings()
-    else:
-        s = DefaultSettings()
+    lines = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+             "hypothesis: " + placeCells.hyp,
+             "trajectory type: " + traj.traj_type,
+             "number of maze config: " + str(maze.nb_of_trials),
+             "number of neurons: " + str(placeCells.n_neurons)]
+
+    with open('./data_generation/generated_data/experiment%s/summary.txt' % i, 'w') as f:
+        for line in lines:
+            f.write(line)
+            f.write('\n')
+
+    with open('./data_generation/generated_data/experiment%s/trajectory.pkl' % i, 'wb') as outp:
+        pickle.dump(traj, outp, pickle.HIGHEST_PROTOCOL)
+    with open('./data_generation/generated_data/experiment%s/placeCells.pkl' % i, 'wb') as outp:
+        pickle.dump(placeCells, outp, pickle.HIGHEST_PROTOCOL)
+    with open('./data_generation/generated_data/experiment%s/maze.pkl' % i, 'wb') as outp:
+        pickle.dump(maze, outp, pickle.HIGHEST_PROTOCOL)
+
+def plot_data(maze, traj, placeCells):
+    c = np.arange(placeCells.n_neurons)
+    for i in range(maze.nb_of_trials):
+        im = plt.figure()
+        plt.title("trajectory 1")
+        idx = np.where(traj.corr_maze_config == i)[0][0]
+        plt.plot(traj.x_traj[traj.traj_cut_idx[idx]:traj.traj_cut_idx[idx + 1]],
+                 traj.y_traj[traj.traj_cut_idx[idx]:traj.traj_cut_idx[idx + 1]], label="trajectory")
+        plt.plot(traj.x_traj[traj.traj_cut_idx[idx]], traj.y_traj[traj.traj_cut_idx[idx]], 'ko', label="start")
+        plt.plot(traj.x_traj[traj.traj_cut_idx[idx + 1] - 1], traj.y_traj[traj.traj_cut_idx[idx + 1] - 1], 'kx',
+                 label="stop")
+        plt.xlim([0, maze.N])
+        plt.ylim([0, maze.N])
+        plt.grid()
+        plt.scatter(placeCells.fieldCenters[0, :, i], placeCells.fieldCenters[1, :, i], marker='*',
+                    c='r', label="place field centers")
+
+        plt.legend()
+        plt.imshow(maze.trialMazeFlags[i, ::-1], cmap='Greens', extent=[0, maze.N, 0, maze.N])
+        plt.show()
+    # Neuron firing fields
+
+    plt.figure()
+    plt.title("Firing rates of the neurons, trajectory 1")
+    plt.imshow(placeCells.firingRates[0:traj.traj_cut_idx[1], :].T, interpolation='nearest', aspect='auto')
+    plt.xlabel("time step")
+    plt.ylabel("Neuron #")
+    plt.show()
+
+    plt.figure()
+    plt.title("Firing rates of 1 neuron")
+    L = len(placeCells.firingRates[0:traj.traj_cut_idx[1], 0])
+    plt.plot(np.arange(L), placeCells.firingRates[0:traj.traj_cut_idx[1], 0])
+    plt.show()
+
+def generate_data(s):
 
     #create objects
     maze = Maze(s.mazeSettings)
@@ -34,67 +89,27 @@ if __name__ == '__main__':
     print("generate trajectories")
     traj.generate_trajectory(maze)
     print("generate firing rates")
-    firingRates = placeCells.fire(np.array([traj.x_traj, traj.y_traj]), maze)
+    placeCells.fire(traj, maze)
+
+
+    return maze, traj, placeCells
+
+if __name__ == '__main__':
+    print("START")
+
+    if USE_CUSTOM_SETTINGS:
+        s = CustomSettings()
+    else:
+        s = DefaultSettings()
+
+    maze, traj, placeCells = generate_data(s)
 
     if SAVE:
-        print("saving data")
-        ##save data
-        i = 0
-        while os.path.exists('./data_generation/generated_data/experiment%s' % i):
-            i += 1
-        os.mkdir('./data_generation/generated_data/experiment%s' % i)
+        save_data()
 
-        lines = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-                 "hypothesis: " + placeCells.hyp,
-                 "trajectory type: " + traj.traj_type,
-                 "number of maze config: " + str(maze.nb_of_trials),
-                 "number of neurons: " + str(placeCells.n_neurons)]
-
-        with open('./data_generation/generated_data/experiment%s/summary.txt' %i, 'w') as f:
-            for line in lines:
-                f.write(line)
-                f.write('\n')
-
-
-        with open('./data_generation/generated_data/experiment%s/trajectory.pkl' % i, 'wb') as outp:
-            pickle.dump(traj, outp, pickle.HIGHEST_PROTOCOL)
-        with open('./data_generation/generated_data/experiment%s/placeCells.pkl' % i, 'wb') as outp:
-            pickle.dump(maze, outp, pickle.HIGHEST_PROTOCOL)
-        with open('./data_generation/generated_data/experiment%s/maze.pkl' % i, 'wb') as outp:
-            pickle.dump(maze, outp, pickle.HIGHEST_PROTOCOL)
-
-
-
-    #####PLOTS
     if PLOT:
-        for i in range(maze.nb_of_trials):
-            im = plt.figure()
-            plt.title("trajectory 1")
-            idx = np.where(traj.corr_maze_config == i)[0][0]
-            plt.plot(traj.x_traj[traj.traj_cut_idx[idx]:traj.traj_cut_idx[idx+1]], traj.y_traj[traj.traj_cut_idx[idx]:traj.traj_cut_idx[idx+1]], label = "trajectory")
-            plt.plot(traj.x_traj[traj.traj_cut_idx[idx]], traj.y_traj[traj.traj_cut_idx[idx]], 'ko', label = "start")
-            plt.plot(traj.x_traj[traj.traj_cut_idx[idx+1]-1], traj.y_traj[traj.traj_cut_idx[idx+1]-1], 'k*', label = "stop")
-            plt.xlim([0, maze.N])
-            plt.ylim([0, maze.N])
-            plt.grid()
-            plt.plot(placeCells.fieldCenters[0, :, i], placeCells.fieldCenters[1, :, i], 'r*', label = "place field centers")
+        plot_data(maze, traj, placeCells)
 
-            plt.legend()
-            plt.imshow(maze.trialMazeFlags[i, ::-1], extent = [0, maze.N, 0, maze.N])
-            plt.show()
-        #Neuron firing fields
 
-        plt.figure()
-        plt.title("Firing rates of the neurons, trajectory 1")
-        plt.imshow(firingRates[0:traj.traj_cut_idx[1], :, 0].T, interpolation='nearest', aspect='auto')
-        plt.xlabel("time step")
-        plt.ylabel("Neuron #")
-        plt.show()
-
-        plt.figure()
-        plt.title("Firing rates of 1 neuron")
-        L = len(firingRates[0:traj.traj_cut_idx[1], 0, 0])
-        plt.plot(np.arange(L), firingRates[0:traj.traj_cut_idx[1], 0, 0])
-        plt.show()
 
 
