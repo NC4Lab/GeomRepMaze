@@ -66,7 +66,7 @@ class CustomSettings():
         }
 
         self.trajectorySettings = {
-            "type": "random_walk", #"random_walk", "point_to_point"
+            "type": "point_to_point", #"random_walk", "point_to_point"
             "n_traj": [5, 2],
             "n_steps": 1000, #only used for random walk
             "step_size": 1 / 10,
@@ -75,12 +75,11 @@ class CustomSettings():
         }
 
         self.firingSettings = {
-            "hyp": "euclidean", #"euclidean", "graph", "reward"
+            "hyp": "graph", #"euclidean", "graph", "reward"
             "n_neurons": 3,
             "std": 0.7,
-            "nu_max": 1000
+            "nu_max": 100,
+            "noise": 0.01
         }
 
-        self.modelSettings = {
-            "model": "MLP"
-        }
+

@@ -43,3 +43,14 @@ def create_connecting_square(c, c_1):
 
     return square
 
+
+def shortest_distance_idx(pos_array, ref_array):
+    """computes distances between points contained in two input arrays. For each point in pos_array,
+    returns the indice of the closets point in ref_array."""
+
+    ref_array_resh = np.repeat(ref_array[:, :, np.newaxis], pos_array.shape[1], axis=2)
+    mat = pos_array[:, np.newaxis, :] - ref_array_resh
+    d_to_ref = np.linalg.norm(mat, axis=0)
+    closest_idx = np.argmin(d_to_ref, axis=0)
+
+    return closest_idx

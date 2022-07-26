@@ -3,57 +3,47 @@ import random
 import math
 from matplotlib import pyplot as plt
 from data_generation.graph import build_graph, BFS_SP, compute_path_distance
+from data_generation.geom_utils import shortest_distance_idx
 
 def gaussian(d, std, p_max):
-    K = std*np.sqrt(2*np.pi)*p_max
-
-    fx =  K/(std * np.sqrt(2 * np.pi)) * np.exp(-0.5 * np.square(d / std)) #TODO replace by pmax
+    fx =  p_max * np.exp(-0.5 * np.square(d / std))
     return fx
 
-def noisy_gaussian(d, std, p_max): #Todo move to utils
+def noisy_gaussian(d, std, p_max, noise_level):
     fx = gaussian(d, std, p_max)
-    noise = np.random.normal(0,0.001*fx.max(),fx.size).reshape(fx.shape)#TODO add noise level as param
+    noise = np.random.normal(0,noise_level*fx.max(),fx.size).reshape(fx.shape)
 
     return fx + noise
 
-"""def firing_proba(x, std, mus, p_max):
-    K = std * np.sqrt(2 * np.pi) * p_max
-    x_resh = np.moveaxis(x, 0, 2)
-    x_2d = np.reshape(x_resh, [x_resh.shape[0] * x_resh.shape[1], x_resh.shape[2]])
-    dist = np.linalg.norm(mus[:, None] - x_2d, axis = -1)
-    spiking_prob = K / (std * np.sqrt(2 * np.pi)) * np.exp(-0.5 * np.square((dist) / std)) #TODO add ext fct for that
-    spikes = np.empty(spiking_prob.shape)
-    for i in range(spikes.shape[0]): ##TODO: this loop is very slow
-        for j in range(spikes.shape[1]):
-            spikes[i, j] = np.random.choice([0, 1], p = [1 - spiking_prob[i, j], spiking_prob[i, j]])
-    return spikes"""
 
 class NeuronsSpatialFiring:
 
     def __init__(self, firingSettings): #Todo add gaussian shapes + max
+
         self.n_neurons = firingSettings["n_neurons"]
         self.std = firingSettings["std"]
         self.hyp = firingSettings["hyp"]
-
         self.nu_max = firingSettings["nu_max"]
+        self.noise = firingSettings["noise"]
         self.fieldCenters = None
         self.firingRates = None
 
     def generateFiringFields(self, maze):
+        """generate place fields center locations"""
 
+        #graph hypothesis
         if self.hyp == "graph":
             self.fieldCenters = np.empty([2, self.n_neurons, maze.nb_of_trials])
-
             n_edges = len(maze.connectedNodes)
 
             #pick an edge and a percentage position on that edge + lateral distance
             firingFieldsEdges   = np.random.choice(np.arange(n_edges), self.n_neurons)
             firingFieldsPercent = np.random.choice(np.arange(100), self.n_neurons)/100
-            latDelta = np.random.uniform(-0.5,0.5, self.n_neurons)
+            latDelta = np.random.uniform(-0.5, 0.5, self.n_neurons)
 
             #place firing fields
             for i in range(maze.nb_of_trials):
-                for j in range(self.n_neurons): ##TODO speed up (remove loop)
+                for j in range(self.n_neurons): ##TODO speed up (remove loop) if possible ?
                     nodes = maze.connectedNodes[firingFieldsEdges[j]]
                     perc = firingFieldsPercent[j]
                     lat_d = latDelta[j]
@@ -75,48 +65,39 @@ class NeuronsSpatialFiring:
         return
 
     def distance(self, maze, maze_config, x, centers):
+        """compute distances between positions and place field centers"""
 
         centers_resh = np.repeat(centers[:, np.newaxis, :], x.shape[1], axis=1)
 
+        #euclidean distances
         if self.hyp == "euclidean":
-            #compute euclidan distance
             mat = x[:, :, np.newaxis] - centers_resh
             d= np.linalg.norm(mat, axis=0)
 
+        #graph distances
         elif self.hyp == "graph":
-            #compute graph distance
-
             cellList = np.asarray(maze.cellList[maze_config]).T+0.5
 
-            #get tiles including traj and place fields positions
-            cellList_resh = np.repeat(cellList[:, :, np.newaxis], x.shape[1], axis = 2)
-            mat = x[:, np.newaxis, :] - cellList_resh ##tODO function for that
-            d_to_tiles = np.linalg.norm(mat, axis=0)
-            x_tiles_mapping = np.argmin(d_to_tiles, axis = 0)
+            #map positions to maze cells
+            x_tiles_mapping = shortest_distance_idx(x, cellList)
+            c_tiles_mapping = shortest_distance_idx(centers, cellList)
 
-            cellList_resh = np.repeat(cellList[:, :, np.newaxis], centers.shape[1], axis = 2)
-            mat = centers[:, np.newaxis, :] - cellList_resh  ##tODO function for that
-            d_to_tiles = np.linalg.norm(mat, axis=0)
-            c_tiles_mapping = np.argmin(d_to_tiles, axis=0)
-
+            #find shortes path between cells
             graph = build_graph(maze.edgeList[maze_config])
-
             cellArray = np.array(maze.cellList[maze_config])
             xCells = cellArray[x_tiles_mapping]
             cCells = cellArray[c_tiles_mapping]
 
-            paths = []
             d = np.zeros([len(xCells), len(cCells)])
             for i in range(len(xCells)):
                 for j in range(len(cCells)):
-                    path = BFS_SP(graph, list(xCells[i]), list(cCells[j]))
+                    path = BFS_SP(graph, list(xCells[i]), list(cCells[j])) #shortest path
                     if path is not None:
                         path[0] = list(x[:, i])
                         path[-1] = list(centers[:, j])
                     else:
                         path = [list(x[:, i]), list(centers[:, j])]
                     d[i, j] = compute_path_distance(path)
-
 
         else:
             print("ERROR: hypothesis non-valid")
@@ -132,7 +113,7 @@ class NeuronsSpatialFiring:
             X = np.array([traj.x_traj[idx[i]:idx[i+1]], traj.y_traj[idx[i]:idx[i+1]]])
             maze_config = traj.corr_maze_config[i]
             d = self.distance(maze, maze_config, X,  self.fieldCenters[:, :, maze_config])
-            self.firingRates[idx[i]:idx[i+1], :] = noisy_gaussian(d, self.std, self.nu_max)
+            self.firingRates[idx[i]:idx[i+1], :] = noisy_gaussian(d, self.std, self.nu_max, self.noise)
 
         return self.firingRates
 
