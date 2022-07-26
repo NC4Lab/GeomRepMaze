@@ -42,53 +42,54 @@ class Trajectory:
 
         k = 0
         for n in range(maze.nb_of_trials):
-            #get path from home to goal
-            graph = build_graph(maze.edgeList[n])
-            start = maze.homes[n]
-            goal = maze.goals[n][0]
+            for m in range(len(maze.goals[n])):
+                #get path from home to goal
+                graph = build_graph(maze.edgeList[n])
+                start = maze.homes[n]
+                goal = maze.goals[n][m]
 
-            path = np.asarray(BFS_SP(graph, start, goal))
-            path = np.add(path, 0.5)
+                path = np.asarray(BFS_SP(graph, start, goal))
+                path = np.add(path, 0.5)
 
-            for i in range(self.n_traj[n]):
-                #starting position
-                self.x_traj.append(path[0, 0])
-                self.y_traj.append(path[0, 1])
+                for i in range(self.n_traj[n]):
+                    #starting position
+                    self.x_traj.append(path[0, 0])
+                    self.y_traj.append(path[0, 1])
 
-                #store index where trajectory starts
-                if n == 0:
-                    self.traj_cut_idx[i] = int(k)
-                else:
-                    self.traj_cut_idx[n * self.n_traj[n - 1] + i] = int(k)
-                k = k+1
+                    #store index where trajectory starts
+                    if n == 0:
+                        self.traj_cut_idx[i] = int(k)
+                    else:
+                        self.traj_cut_idx[n * self.n_traj[n - 1] + i] = int(k)
+                    k = k+1
 
-                #generate trajectory
-                for j in range(len(path)-1):
-                    while np.linalg.norm(path[j + 1] - [self.x_traj[-1], self.y_traj[-1]]) > 0.1: #TODO 0.1 as param
-                        var = random.uniform(-self.speed_var, self.speed_var)
-                        d = self.d + var*self.d
+                    #generate trajectory
+                    for j in range(len(path)-1):
+                        while np.linalg.norm(path[j + 1] - [self.x_traj[-1], self.y_traj[-1]]) > 0.1: #TODO 0.1 as param
+                            var = random.uniform(-self.speed_var, self.speed_var)
+                            d = self.d + var*self.d
 
-                        validNextX, validNextY = maze.get_adjacent_points(self.x_traj[k-1], self.y_traj[k-1],
+                            validNextX, validNextY = maze.get_adjacent_points(self.x_traj[k-1], self.y_traj[k-1],
                                                                           d, self.angular_res, trial = n)
-                        validNext = np.column_stack([validNextX, validNextY])
+                            validNext = np.column_stack([validNextX, validNextY])
 
-                        vToGoal = path[j+1] - np.array([self.x_traj[k-1], self.y_traj[k-1]]) #vector from current pos to goal
-                        vToGoal = vToGoal/np.linalg.norm(vToGoal)*d
-                        driftPos = np.array([self.x_traj[k-1], self.y_traj[k-1]]) + vToGoal
+                            vToGoal = path[j+1] - np.array([self.x_traj[k-1], self.y_traj[k-1]]) #vector from current pos to goal
+                            vToGoal = vToGoal/np.linalg.norm(vToGoal)*d
+                            driftPos = np.array([self.x_traj[k-1], self.y_traj[k-1]]) + vToGoal
 
-                        #randomly choose next position among possible adjacent positions
-                        if maze.isInMaze(self.x_traj[k-1] + vToGoal[0], self.y_traj[k-1] + vToGoal[1], trial=n):
-                            validNext = np.row_stack([validNext, driftPos])
-                            prob = np.ones(len(validNext))*((1-self.p_drift)/(len(validNext)-1))
-                            prob[-1] = self.p_drift
-                            idxNext = np.random.choice(np.arange(len(validNext)), p = prob)
-                        else:
-                            idxNext = random.choice(np.arange(len(validNext)))
+                            #randomly choose next position among possible adjacent positions
+                            if maze.isInMaze(self.x_traj[k-1] + vToGoal[0], self.y_traj[k-1] + vToGoal[1], trial=n):
+                                validNext = np.row_stack([validNext, driftPos])
+                                prob = np.ones(len(validNext))*((1-self.p_drift)/(len(validNext)-1))
+                                prob[-1] = self.p_drift
+                                idxNext = np.random.choice(np.arange(len(validNext)), p = prob)
+                            else:
+                                idxNext = random.choice(np.arange(len(validNext)))
 
-                        nextPos = validNext[idxNext]
-                        self.x_traj.append(nextPos[0])
-                        self.y_traj.append(nextPos[1])
-                        k = k+1
+                            nextPos = validNext[idxNext]
+                            self.x_traj.append(nextPos[0])
+                            self.y_traj.append(nextPos[1])
+                            k = k+1
 
         self.x_traj = np.asarray(self.x_traj).T
         self.y_traj = np.asarray(self.y_traj).T
