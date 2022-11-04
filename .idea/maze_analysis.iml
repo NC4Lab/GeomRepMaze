@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
-    <orderEntry type="jdk" jdkName="Python 3.8 (NC42)" jdkType="Python SDK" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/data_generation/generated_data" />
+      <excludeFolder url="file://$MODULE_DIR$/saved_models" />
+      <excludeFolder url="file://$MODULE_DIR$/data_generation/saved_fields" />
+      <excludeFolder url="file://$MODULE_DIR$/figures/fig1" />
+      <excludeFolder url="file://$MODULE_DIR$/figures/fig1v2" />
+      <excludeFolder url="file://$MODULE_DIR$/figures/fig2v2" />
+      <excludeFolder url="file://$MODULE_DIR$/figures/fig3" />
+      <excludeFolder url="file://$MODULE_DIR$/figures/fig4" />
+      <excludeFolder url="file://$MODULE_DIR$/figures/fig2" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.10 (NC42)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

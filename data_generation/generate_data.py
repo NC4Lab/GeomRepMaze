@@ -1,38 +1,46 @@
+"""GENERATE BEHAVIORAL AND NEURAL DATA"""
 import numpy as np
 import pickle
 import os
 from datetime import datetime
-from matplotlib import pyplot as plt
 from data_generation.generate_trajectory import Trajectory
 from data_generation.maze import Maze
-from data_generation.spatial_firing import NeuronsSpatialFiring
+from data_generation.spatial_firing import PlaceCell
 from settings.custom_settings import CustomSettings
 from settings.default_settings import DefaultSettings
+from data_generation.plots import *
 
 USE_CUSTOM_SETTINGS = True
 PLOT = True
-SAVE = False
+SAVE = True
 
-############################# Main ##########################################
 def save_data():
+    """Saves the generated data"""
+
     print("saving data")
-    ##save data
     i = 0
+
+    #check path
     while os.path.exists('./data_generation/generated_data/experiment%s' % i):
         i += 1
     os.mkdir('./data_generation/generated_data/experiment%s' % i)
 
+    #summary output
     lines = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
              "hypothesis: " + placeCells.hyp,
              "trajectory type: " + traj.traj_type,
+             "number of trajectories: " + str(traj.n_traj),
              "number of maze config: " + str(maze.nb_of_trials),
-             "number of neurons: " + str(placeCells.n_neurons)]
+             "number of neurons: " + str(placeCells.n_neurons),
+             "drift: " + str(traj.p_drift),
+             "FR noise: " + str(placeCells.rate_noise)]
 
     with open('./data_generation/generated_data/experiment%s/summary.txt' % i, 'w') as f:
         for line in lines:
             f.write(line)
             f.write('\n')
 
+    #save data structures
     with open('./data_generation/generated_data/experiment%s/trajectory.pkl' % i, 'wb') as outp:
         pickle.dump(traj, outp, pickle.HIGHEST_PROTOCOL)
     with open('./data_generation/generated_data/experiment%s/placeCells.pkl' % i, 'wb') as outp:
@@ -41,27 +49,17 @@ def save_data():
         pickle.dump(maze, outp, pickle.HIGHEST_PROTOCOL)
 
 def plot_data(maze, traj, placeCells):
-    c = np.arange(placeCells.n_neurons)
+
+    #plot an example trajectory in each maze configuartion
+    idx = 0
+    nb_goals = 3
     for i in range(maze.nb_of_trials):
-        im = plt.figure()
-        plt.title("trajectory 1")
-        idx = np.where(traj.corr_maze_config == i)[0][0]
-        plt.plot(traj.x_traj[traj.traj_cut_idx[idx]:traj.traj_cut_idx[idx + 1]],
-                 traj.y_traj[traj.traj_cut_idx[idx]:traj.traj_cut_idx[idx + 1]], label="trajectory")
-        plt.plot(traj.x_traj[traj.traj_cut_idx[idx]], traj.y_traj[traj.traj_cut_idx[idx]], 'ko', label="start")
-        plt.plot(traj.x_traj[traj.traj_cut_idx[idx + 1] - 1], traj.y_traj[traj.traj_cut_idx[idx + 1] - 1], 'kx',
-                 label="stop")
-        plt.xlim([0, maze.N])
-        plt.ylim([0, maze.N])
-        plt.grid()
-        plt.scatter(placeCells.fieldCenters[0, :, i], placeCells.fieldCenters[1, :, i], marker='*',
-                    c='r', label="place field centers")
+        traj_x_array = traj.x_traj[traj.traj_cut_idx[idx]:traj.traj_cut_idx[idx + 1]]
+        traj_y_array = traj.y_traj[traj.traj_cut_idx[idx]:traj.traj_cut_idx[idx + 1]]
+        plot_traj_cells_maze(traj_x_array, traj_y_array, maze, placeCells, title="example of a trajectory", config=i)
+        idx += nb_goals*traj.n_traj[i]
 
-        plt.legend()
-        plt.imshow(maze.trialMazeFlags[i, ::-1], cmap='Greens', extent=[0, maze.N, 0, maze.N])
-        plt.show()
-    # Neuron firing fields
-
+    # plot firing rates of neuron for an example trajectory
     plt.figure()
     plt.title("Firing rates of the neurons, trajectory 1")
     plt.imshow(placeCells.firingRates[0:traj.traj_cut_idx[1], :].T, interpolation='nearest', aspect='auto')
@@ -69,6 +67,7 @@ def plot_data(maze, traj, placeCells):
     plt.ylabel("Neuron #")
     plt.show()
 
+    # plot firing rate time serie of an example neuron for an example trajectory
     plt.figure()
     plt.title("Firing rates of 1 neuron")
     L = len(placeCells.firingRates[0:traj.traj_cut_idx[1], 0])
@@ -80,19 +79,20 @@ def generate_data(s):
     #create objects
     maze = Maze(s.mazeSettings)
     traj = Trajectory(s.trajectorySettings)
-    placeCells = NeuronsSpatialFiring(s.firingSettings)
-
+    placeCells = PlaceCell(s.firingSettings)
     print("create maze")
     maze.createTrialMaze(s.mazeSettings)
     print("place firing fields")
-    placeCells.generateFiringFields(maze)
+    placeCells.generateFieldCenters(maze)
     print("generate trajectories")
     traj.generate_trajectory(maze)
     print("generate firing rates")
-    placeCells.fire(traj, maze)
-
+    placeCells.generate_firing_rates(traj, maze)
 
     return maze, traj, placeCells
+
+
+############################# Main ##########################################
 
 if __name__ == '__main__':
     print("START")

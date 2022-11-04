@@ -1,32 +1,27 @@
-import numpy as np
-import math
 from matplotlib.path import Path
-from matplotlib import pyplot as plt
 from shapely.ops import unary_union
-from shapely.geometry.polygon import Polygon
-from data_generation.graph import build_graph, BFS_SP
-from data_generation.geom_utils import *
+from data_generation.utils.geom_utils import *
+from data_generation.utils.graph import BFS_SP
 
 
 
-"Class to define a Square Maze with obstacles"
+"Class to define a Maze platform with different configurations"
 class Maze():
 
     def __init__(self, mazeSettings):
         self.N = mazeSettings["size"]  # Maze width
         self.octoMazeBool = mazeSettings["octogonalMaze"] #a boolean to choose betwen octgonal or square maze grid
-        self.homes = mazeSettings["homes"]
-        self.goals = mazeSettings["goals"]
-        self.nb_of_trials = mazeSettings["nb_of_trials"]
+
+        self.nb_of_trials= mazeSettings["nb_of_trials"]
         self.mazeRes = mazeSettings["resolution"]  # pixels width per cell
-        self.cellList = mazeSettings["cellList"]
-        self.edgeList = mazeSettings["edgeList"]
+
         self.nodeList = mazeSettings["nodeList"]
+        self.edgeList = self.get_edge_list()
+        self.cellList = self.get_cell_list()
 
         self.fullSquareMaze = np.zeros((self.N, self.N), dtype=bool)
         self.trialSquareMaze = np.zeros((self.nb_of_trials,self.N, self.N), dtype=bool)
 
-        self.fullOctoMaze = None
         self.fullOctoMaze = None
         self.trialOctoMaze = []
         self.fullMazeFlags = np.zeros([self.nb_of_trials, self.mazeRes*self.N, self.mazeRes*self.N], dtype = bool)
@@ -34,8 +29,33 @@ class Maze():
 
 
         self.createFullMaze(mazeSettings)
-        self.connectedNodes,  self.edgeTiles = self.get_connected_nodes()
+        self.connectedNodes = self.get_connected_nodes()
 
+    def get_edge_list(self):
+        keyList = ["A", "C", "D", "E"]
+        edge_list = []
+
+        for i, n in enumerate(self.nodeList):
+            sublist = []
+            t0 = np.array(n["B"])
+
+            for k in keyList:
+                t1 = np.array(n[str(k)])
+                while list(t0) != list(t1):
+                    t1_n = t1 + np.sign(t0 - t1)
+                    sublist.append([list(t1), list(t1_n)])
+                    t1 = t1_n
+
+            edge_list.append(sublist)
+        return edge_list
+
+    def get_cell_list(self):
+        cell_list = []
+        for i, c in enumerate(self.edgeList):
+
+            c = np.array(c).reshape((int(np.array(c).size/2), 2))
+            cell_list.append(np.unique(c, axis=0))
+        return cell_list
 
     def get_connected_nodes(self):
         connectedNodes = []
@@ -56,7 +76,7 @@ class Maze():
                     connectedNodes.append([keys[j], keys[k]])
                     edgeTiles.append(path)
 
-        return connectedNodes, edgeTiles
+        return connectedNodes
 
 
     def createFullMaze(self, mazeSettings):
@@ -74,8 +94,8 @@ class Maze():
         self.fullMazeFlags = np.repeat(mazeFlags, self.mazeRes, axis=0).T
 
     def createFullOctoMaze(self, mazeSettings):
-        mazeCells = mazeSettings["cellList"]
-        mazeEdges = mazeSettings["edgeList"]
+        mazeCells = self.cellList
+        mazeEdges = self.edgeList
 
         polygonList = []
 
@@ -99,7 +119,7 @@ class Maze():
         #merge polygons and convert to path object
         self.fullOctoMaze = Path(np.asarray(unary_union(polygonList).exterior.xy).T)
 
-        self.fullMazeFlags = self.polygon_to_flags(self.fullOctoMaze)
+        self.fullMazeFlags = self.polygon_to_flags(self.fullOctoMaze, self.mazeRes)
 
     def createTrialMaze(self, mazeSettings, trial = None):
 
@@ -120,8 +140,8 @@ class Maze():
 
         for n in range(mazeSettings["nb_of_trials"]):
 
-            trialCells = mazeSettings["cellList"][n]
-            trialEdges = mazeSettings["edgeList"][n]
+            trialCells = self.cellList[n]
+            trialEdges = self.edgeList[n]
 
             polygonList = []
 
@@ -145,10 +165,10 @@ class Maze():
             self.trialOctoMaze.append(Path(np.asarray(unary_union(polygonList).exterior.xy).T))
 
             # create binary flags for each pixels (either in or out maze tiles)
-            self.trialMazeFlags[n, :, :] = self.polygon_to_flags(self.trialOctoMaze[n])
+            self.trialMazeFlags[n, :, :] = self.polygon_to_flags(self.trialOctoMaze[n], self.mazeRes)
 
     def isInMaze(self, x, y, trial = None, mode = "trial"):
-        """checks if the point in input is in the maze"""
+        """checks if the point (x, y) in input is in the maze"""
 
         #Octogonal maze
         if self.octoMazeBool:
@@ -205,12 +225,12 @@ class Maze():
         cell_pol = Path(np.asarray(cell_pol.exterior.xy).T)
 
         # create binary flags for each pixels (either in or out maze tiles)
-        flags = self.polygon_to_flags(cell_pol)
+        flags = self.polygon_to_flags(cell_pol, self.mazeRes)
 
         return flags
 
-    def polygon_to_flags(self, polygon):
-        M = self.N * self.mazeRes
+    def polygon_to_flags(self, polygon, res):
+        M = self.N * res
         xv, yv = np.meshgrid(np.linspace(0, self.N, M), np.linspace(0, self.N, M))
         flags = polygon.contains_points(
             np.hstack((xv.flatten()[:, np.newaxis], yv.flatten()[:, np.newaxis]))).reshape((M, M))
